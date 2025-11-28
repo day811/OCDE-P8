@@ -1,0 +1,22 @@
+{
+"python.defaultInterpreterPath": "/usr/bin/python3",
+"python.testing.pytestEnabled": true,
+"python.testing.unittestEnabled": false,
+"python.testing.pytestArgs": [
+"transformation/tests"
+],
+"python.analysis.extraPaths": [
+"transformation/src"
+],
+"python.linting.enabled": true,
+"python.linting.pylintEnabled": true,
+"editor.tabSize": 4,
+"editor.insertSpaces": true,
+"files.exclude": {
+"/pycache": true,
+"/.pytest_cache": true,
+"**/.venv": true
+},
+"terminal.integrated.cwd": "${workspaceFolder}",
+"python.envFile": "${workspaceFolder}/.env"
+}
