@@ -1,0 +1,124 @@
+# docker-compose.yml
+
+
+services:
+  # ============================================================================
+  # SERVICE 1 : PREPROCESSING (URLs → JSONL normalisé)
+  # ============================================================================
+  preprocessing:
+    build:
+      context: ./transformation/src/preprocessing
+      dockerfile: Dockerfile
+    container_name: greencoop-preprocessing
+    environment:
+      - CONFIG_FILE=/app/config/sources_config.yaml
+      - OUTPUT_DIR=/data/clean
+      - LOG_LEVEL=INFO
+    volumes:
+      - ./transformation/config:/app/config:ro          # Config (read-only)
+      - preprocessing_data:/data/clean                  # Output JSONL
+      - ./transformation/logs:/app/logs                 # Logs
+    networks:
+      - greencoop_network
+    depends_on:
+      - mongodb
+    restart: on-failure
+    healthcheck:
+      test: ["CMD", "test", "-d", "/data/clean"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # ============================================================================
+  # SERVICE 2 : INGESTION (JSONL → MongoDB + Validation)
+  # ============================================================================
+  ingestion:
+    build:
+      context: ./transformation/src/ingestion
+      dockerfile: Dockerfile
+    container_name: greencoop-ingestion
+    environment:
+      - MONGODB_URI=mongodb://mongodb:27017
+      - DATABASE_NAME=greencoop_forecast
+      - INPUT_DIR=/data/clean
+      - LOG_LEVEL=INFO
+    volumes:
+      - preprocessing_data:/data/clean:ro               # Input JSONL (read-only)
+      - ./transformation/logs:/app/logs                 # Logs
+    networks:
+      - greencoop_network
+    depends_on:
+      preprocessing:
+        condition: service_healthy
+      mongodb:
+        condition: service_healthy
+    restart: on-failure
+    healthcheck:
+      test: ["CMD", "python", "-c", "import pymongo; pymongo.MongoClient('mongodb:27017').admin.command('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # ============================================================================
+  # SERVICE 3 : MongoDB
+  # ============================================================================
+  mongodb:
+    image: mongo:7.0
+    container_name: greencoop-mongodb
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_PASSWORD:-defaultpassword}
+      - MONGO_INITDB_DATABASE=greencoop_forecast
+    volumes:
+      - mongodb_data:/data/db                           # Persistance données
+      - ./mongodb/init-db.js:/docker-entrypoint-initdb.d/init.js:ro
+    ports:
+      - "27017:27017"
+    networks:
+      - greencoop_network
+    restart: unless-stopped
+    healthcheck:
+      test: echo 'db.adminCommand("ping")' | mongosh localhost:27017/test
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # ============================================================================
+  # SERVICE 4 : Data Quality Checker (Optionnel mais recommandé)
+  # ============================================================================
+  data_quality:
+    build:
+      context: ./transformation/src/quality_checker
+      dockerfile: Dockerfile
+    container_name: greencoop-data-quality
+    environment:
+      - MONGODB_URI=mongodb://mongodb:27017
+      - DATABASE_NAME=greencoop_forecast
+      - LOG_LEVEL=INFO
+    volumes:
+      - ./transformation/logs:/app/logs
+      - quality_reports:/reports
+    networks:
+      - greencoop_network
+    depends_on:
+      ingestion:
+        condition: service_healthy
+    restart: on-failure
+
+# ============================================================================
+# VOLUMES
+# ============================================================================
+volumes:
+  preprocessing_data:                           # Données pré-traitées
+    driver: local
+  mongodb_data:                                 # Persistance MongoDB
+    driver: local
+  quality_reports:                              # Rapports qualité
+    driver: local
+
+# ============================================================================
+# NETWORKS
+# ============================================================================
+networks:
+  greencoop_network:
+    driver: bridge

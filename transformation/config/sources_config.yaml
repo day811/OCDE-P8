@@ -1,0 +1,78 @@
+# transformation/config/sources_config.yaml
+
+sources:
+  wunderground_ilamad25:
+    type: "excel"
+    source_name: "Weather Underground"
+    station_id: "ILAMAD25"
+    station_name: "La Madeleine"
+    latitude: 50.659
+    longitude: 3.07
+    elevation: 23
+    city: "La Madeleine"
+    state: "-/-"
+    hardware: "other"
+    software: "EasyWeatherPro_V5.1.6"
+    file_path: "https://s3.eu-west-1.amazonaws.com/course.oc-static.com/projects/922_Data+Engineer/922_P8/Weather+Underground+-+La+Madeleine%2C+FR.xlsx"
+    output_format: "jsonl"
+    skip_empty_rows: true
+    skip_header_blank_rows: true
+    
+  wunderground_iichte19:
+    type: "excel"
+    source_name: "Weather Underground"
+    station_id: "IICHTE19"
+    station_name: "Ichtegem"
+    latitude: 51.0833
+    longitude: 3.1667
+    elevation: 15
+    city: "Ichtegem"
+    state: "-/-"
+    hardware: "other"
+    software: "EasyWeatherPro_V5.1.6"
+    file_path: "https://s3.eu-west-1.amazonaws.com/course.oc-static.com/projects/922_Data+Engineer/922_P8/Weather+Underground+-+Ichtegem%2C+BE.xlsx"
+    output_format: "jsonl"
+    skip_empty_rows: true
+    skip_header_blank_rows: true
+  
+  infoclimat:
+    type: "json"
+    source_name: "InfoClimat"
+    file_path: "https://s3.eu-west-1.amazonaws.com/course.oc-static.com/projects/922_Data+Engineer/922_P8/Data_Source1_011024-071024.json"
+    output_format: "jsonl"
+    skip_empty_rows: true
+
+# Schéma de sortie unifié pour toutes les sources
+output_metadata:
+  # Metadata
+  id_station: "Station unique identifier"
+  station_name: "Human readable station name"
+  latitude: "float - decimal degrees"
+  longitude: "float - decimal degrees"
+  elevation: "integer - meters"
+  city: "City name"
+  state: "State/Province"
+  hardware: "Hardware type (for WU stations)"
+  software: "Software version (for WU stations)"
+  
+  # Measurements
+  dh_utc: "ISO 8601 timestamp UTC"
+  temperature: "float - degrees Celsius"
+  pression: "float - hPa (mean sea level pressure)"
+  humidite: "float - percent relative humidity"
+  point_de_rosee: "float - degrees Celsius (dewpoint)"
+  visibilite: "float - meters (horizontal visibility)"
+  vent_moyen: "float - km/h (mean wind speed)"
+  vent_rafales: "float - km/h (wind gust)"
+  vent_direction: "float - degrees (0-360)"
+  pluie_3h: "float - mm (precipitation over 3h)"
+  pluie_1h: "float - mm (precipitation over 1h)"
+  neige_au_sol: "float - cm (snow depth)"
+  nebulosite: "string - octats (cloud cover)"
+  temps_omm: "integer - present weather code"
+  
+  # Processing metadata
+  _source: "Data source name"
+  _ingestion_timestamp: "When data was processed"
+  _raw_source: "Original field names for debugging"
+
