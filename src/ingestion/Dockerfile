@@ -9,6 +9,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY mongo_loader.py .
 
-RUN mkdir -p /app/logs && chmod 777 /app/logs
-
 ENTRYPOINT ["python", "mongo_loader.py"]
