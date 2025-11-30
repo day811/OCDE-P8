@@ -15,13 +15,13 @@ services:
       - CONFIG_FILE=${CONFIG_FILE}
       - LOCAL_STORAGE=${LOCAL_STORAGE}
       - LOG_LEVEL=${LOG_LEVEL}
-      - S3_BUCKET={S3_BUCKET}
+      - S3_BUCKET=${S3_BUCKET}
       - S3_PATH=${S3_PATH}
-      - AWS_ACCESS_KEY_IDAWS_ACCESS_KEY_ID
-      - AWS_SECRET_ACCESS_KEY={AWS_SECRET_ACCESS_KEY}
-      - AWS_REGION={AWS_REGION}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_REGION=${AWS_REGION}
     volumes:
-      - ./transformation/config:/app/config:ro
+      - ./config:/app/config:ro
       - preprocessing_data:/data/clean
       - ./logs:/app/logs
     networks:
@@ -29,11 +29,6 @@ services:
     depends_on:
       - mongodb
     restart: on-failure
-    healthcheck:
-      test: ["CMD", "test", "-d", "/data/clean"]
-      interval: 10s
-      timeout: 5s
-      retries: 3
 
 # ============================================================================
 # SERVICE 2 : INGESTION (JSONL → MongoDB)
@@ -49,15 +44,15 @@ services:
       - DATABASE_NAME=${DATABASE_NAME}
       - LOCAL_STORAGE=${LOCAL_STORAGE}
       - CONFIG_FILE=${CONFIG_FILE}
-      - LOG_LEVEL=${LOG_LEVEL:-INFO}
-      - S3_BUCKET={S3_BUCKET}
+      - LOG_LEVEL=${LOG_LEVEL}
+      - S3_BUCKET=${S3_BUCKET}
       - S3_PATH=${S3_PATH}
-      - AWS_ACCESS_KEY_IDAWS_ACCESS_KEY_ID
-      - AWS_SECRET_ACCESS_KEY={AWS_SECRET_ACCESS_KEY}
-      - AWS_REGION={AWS_REGION}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_REGION=${AWS_REGION}
     volumes:
       - preprocessing_data:/data/clean:ro
-      - ./transformation/config:/app/config:ro
+      - ./config:/app/config:ro
       - ./logs:/app/logs
     networks:
       - greencoop_network
@@ -67,11 +62,6 @@ services:
       mongodb:
         condition: service_healthy
     restart: on-failure
-    healthcheck:
-      test: ["CMD", "python", "-c", "import pymongo; pymongo.MongoClient('mongodb://admin:greencoop_secure_2024@mongodb:27017').admin.command('ping')"]
-      interval: 10s
-      timeout: 5s
-      retries: 3
 
 # ============================================================================
 # SERVICE 3 : MongoDB
@@ -81,9 +71,9 @@ services:
     image: mongo:7.0
     container_name: greencoop-mongodb
     environment:
-      - MONGO_INITDB_ROOT_USERNAME=${MONGO_ROOT_USER:-admin}
-      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_PASSWORD:-greencoop_secure_2024}
-      - MONGO_INITDB_DATABASE=${DATABASE_NAME:-greencoop_forecast}
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_ROOT_USER}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_PASSWORD}
+      - MONGO_INITDB_DATABASE=${DATABASE_NAME}
     volumes:
       - mongodb_data:/data/db
       - ./mongodb/init-db.js:/docker-entrypoint-initdb.d/init.js:ro
@@ -108,16 +98,16 @@ services:
       dockerfile: Dockerfile
     container_name: greencoop-quality-checker
     environment:
-      - MONGODB_URI=${MONGODB_URI:-mongodb://admin:greencoop_secure_2024@mongodb:27017}
-      - DATABASE_NAME=${DATABASE_NAME:-greencoop_forecast}
-      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - MONGODB_URI=${MONGODB_URI}
+      - DATABASE_NAME=${DATABASE_NAME}
+      - LOG_LEVEL=${LOG_LEVEL}
     volumes:
       - ./logs:/app/logs
     networks:
       - greencoop_network
     depends_on:
       ingestion:
-        condition: service_healthy
+        condition: service_completed_successfully
     restart: on-failure
 
 # ============================================================================
@@ -130,9 +120,9 @@ services:
     ports:
       - "8081:8081"
     environment:
-      - ME_CONFIG_MONGODB_URL=mongodb://admin:greencoop_secure_2024@mongodb:27017/
-      - ME_CONFIG_MONGODB_ADMINUSERNAME=${MONGO_ROOT_USER:-admin}
-      - ME_CONFIG_MONGODB_ADMINPASSWORD=${MONGO_PASSWORD:-greencoop_secure_2024}
+      - ME_CONFIG_MONGODB_URL=${MONGODB_URI}
+      - ME_CONFIG_MONGODB_ADMINUSERNAME=${MONGO_ROOT_USER}
+      - ME_CONFIG_MONGODB_ADMINPASSWORD=${MONGO_PASSWORD}
     networks:
       - greencoop_network
     depends_on:
