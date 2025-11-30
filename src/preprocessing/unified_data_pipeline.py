@@ -616,7 +616,7 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='Unified Data Pipeline')
     parser.add_argument(
-        '--config',
+        '----config-file',
         default=os.getenv('CONFIG_FILE','config.yaml'),
         help='Configuration file name in config/'
     )
@@ -627,12 +627,14 @@ if __name__ == '__main__':
     )
     
     args = parser.parse_args()
-    logger.info(f"Configuration file name : {args.config}")
-    logger.info(f"Local output : {args.local_storage}")
+    logger.info(f"Configuration file name : {args.config_file}")
+    logger.info(f"Local storage : {args.local_storage}")
+    logger.info(f"Configuration file path : {os.getenv('S3_PATH','None')}")
+    logger.info(f"S3 bucket : {os.getenv('S3_BUCKET','None')}")
 
     
     try:
-        pipeline = UnifiedDataPipeline(args.config)
+        pipeline = UnifiedDataPipeline(args.config_file)
         results, saved_file = pipeline.run(args.local_storage)
         logger.info("✅ SUCCESS")
         sys.exit(0)

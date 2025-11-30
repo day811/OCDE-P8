@@ -94,7 +94,7 @@ class LocalDataSource(DataSource):
 class S3DataSource(DataSource):
     """Read from AWS S3."""
     
-    def __init__(self, bucket: str, region: str = 'eu-west-3'):
+    def __init__(self, bucket: str, path : str, region: str = 'eu-west-3'):
         """Initialize S3 client with explicit credentials."""
         if not HAS_BOTO3:
             raise ImportError('boto3 required for S3 support. Install with: pip install boto3')
@@ -144,23 +144,25 @@ class S3DataSource(DataSource):
 # DATA SOURCE FACTORY
 # ============================================================================
 
-def get_data_source(local_storage: str, s3_bucket: Optional[str] = None) -> DataSource:
+def get_data_source(local: str, pathname: str, bucket: Optional[str] = None, region :  Optional[str] = None) -> DataSource:
     """
     Determine data source based on input path.
     
     Args:
-        local_storage: Local path or S3 prefix
-        s3_bucket: S3 bucket name (if using S3)
+        local: Local path or null if S3 
+        pathname : S3 path and pattern for filename
+        bucket : S3 bucket name (if using S3)
+        region : S3 refion name
     
     Returns:
         Appropriate DataSource implementation
     """
-    if s3_bucket:
-        logger.info(f'Using S3 data source: s3://{s3_bucket}/{local_storage}')
-        return S3DataSource(s3_bucket)
+    if local and local.strip():    
+        logger.info(f'Using local data source folder: {local}')
+        return LocalDataSource(pathname)
     else:
-        logger.info(f'Using local data source: {local_storage}')
-        return LocalDataSource()
+        logger.info(f'Using S3 data source: s3://{bucket}/{local}')
+        return S3DataSource(bucket, pathname)
 
 
 # ============================================================================
@@ -610,6 +612,10 @@ def main():
                        help='Local path containing JSONL files')
     parser.add_argument('--s3-bucket', default=os.getenv('S3_BUCKET', None),
                        help='S3 bucket name (if reading from S3)')
+    parser.add_argument('--s3-path', default=os.getenv('S3_PATH'),
+                       help='S3 path (always used as filename)')
+    parser.add_argument('--s3-region', default=os.getenv('AWS_REGION','eu-west-3'),
+                       help='S3 bucket region')
     parser.add_argument('--config-file', default=os.getenv('CONFIG_FILE', 'sources_config.yaml'),
                        help='Path to sources_config.yaml for output_metadata')
     parser.add_argument('--drop-collections', action='store_true',
@@ -624,7 +630,10 @@ def main():
     logger.info('=' * 70)
     logger.info('MONGODB DATA INGESTION PIPELINE - LOADING PHASE')
     logger.info('=' * 70)
-    logger.info('')
+    logger.info(f"Configuration file name : {args.config_file}")
+    logger.info(f"Local storage : {args.local_storage}")
+    logger.info(f"Configuration file path : {args.s3_path}")
+    logger.info(f"S3 bucket : {args.s3_bucket}")
     
     try:
         # 1. Connect
@@ -666,7 +675,7 @@ def main():
         # 4. Load data
         logger.info('STEP 4: Loading observations and stations')
         logger.info('-' * 70)
-        data_source = get_data_source(args.local_storage, args.s3_bucket)
+        data_source = get_data_source(local= args.local_storage, pathname= args.s3_path, bucket= args.s3_bucket, region=args.s3_region)
         
         jsonl_files = data_source.list_files(f'{args.local_storage}/*.jsonl' if not args.s3_bucket else f'{args.local_storage}*.jsonl')
         
