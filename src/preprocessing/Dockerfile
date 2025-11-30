@@ -1,4 +1,4 @@
-# transformation/src/preprocessing/Dockerfile
+# src/preprocessing/Dockerfile
 
 FROM python:3.11-slim
 
@@ -18,6 +18,4 @@ COPY unified_data_pipeline.py .
 RUN mkdir -p /app/logs /data/clean
 
 # Exécuter le script au démarrage
-ENTRYPOINT ["python", "unified_data_pipeline.py", \
-    "--config", "${CONFIG_FILE:-/app/config/sources_config.yaml}", \
-    "--output-dir", "${OUTPUT_DIR:-/data/clean}"]
+ENTRYPOINT ["python", "unified_data_pipeline.py"]

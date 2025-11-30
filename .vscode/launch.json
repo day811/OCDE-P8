@@ -5,12 +5,12 @@
       "name": "Test Preprocessing - Unified Pipeline",
       "type": "python",
       "request": "launch",
-      "program": "${workspaceFolder}/transformation/src/preprocessing/unified_data_pipeline.py",
+      "program": "${workspaceFolder}/src/preprocessing/unified_data_pipeline.py",
       "console": "integratedTerminal",
       "justMyCode": true,
       "args": [
         "--config",
-        "${workspaceFolder}/transformation/config/sources_config.yaml",
+        "${workspaceFolder}/config/sources_config.yaml",
         "--output-dir",
         "${workspaceFolder}/data/clean"
       ],
@@ -23,7 +23,7 @@
       "name": "Test Preprocessing - Excel Handler",
       "type": "python",
       "request": "launch",
-      "program": "${workspaceFolder}/transformation/tests/test_preprocessing.py",
+      "program": "${workspaceFolder}/tests/test_preprocessing.py",
       "console": "integratedTerminal",
       "justMyCode": true,
       "args": [
@@ -36,7 +36,7 @@
       "name": "Test Preprocessing - JSON Handler",
       "type": "python",
       "request": "launch",
-      "program": "${workspaceFolder}/transformation/tests/test_preprocessing.py",
+      "program": "${workspaceFolder}/tests/test_preprocessing.py",
       "console": "integratedTerminal",
       "justMyCode": true,
       "args": [
@@ -52,7 +52,7 @@
       "program": "-m",
       "args": [
         "pytest",
-        "${workspaceFolder}/transformation/tests/test_preprocessing.py",
+        "${workspaceFolder}/tests/test_preprocessing.py",
         "-v",
         "-s"
       ],
@@ -67,7 +67,7 @@
       "program": "-m",
       "args": [
         "pytest",
-        "${workspaceFolder}/transformation/tests/test_data_quality.py",
+        "${workspaceFolder}/tests/test_data_quality.py",
         "-v",
         "-s"
       ],
@@ -82,7 +82,7 @@
       "program": "-m",
       "args": [
         "pytest",
-        "${workspaceFolder}/transformation/tests/",
+        "${workspaceFolder}/tests/",
         "-v",
         "-s",
         "--tb=short"
@@ -95,7 +95,7 @@
       "name": "Test Ingestion - Mongo Loader",
       "type": "python",
       "request": "launch",
-      "program": "${workspaceFolder}/transformation/src/ingestion/mongo_loader.py",
+      "program": "${workspaceFolder}/src/ingestion/mongo_loader.py",
       "console": "integratedTerminal",
       "justMyCode": true,
       "args": [

@@ -464,8 +464,4 @@ Time        | Temperature | Wind | Humidity | sheet_name
 
 ---
 
-Si tu veux, je peux te fournir **une version complète clé-en-main avec JSON Schema** déjà intégré pour le stream, ce qui permet d’avoir tous les types de colonnes détectés automatiquement dans Airbyte et les destinations.
-
-Veux-tu que je fasse ça ?
-
 

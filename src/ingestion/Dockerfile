@@ -1,4 +1,4 @@
-# transformation/src/ingestion/Dockerfile
+# src/ingestion/Dockerfile
 
 FROM python:3.11-slim
 

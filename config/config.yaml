@@ -1,4 +1,4 @@
-# transformation/config/sources_config.yaml
+# config/sources_config.yaml
 
 sources:
   wunderground_ilamad25:
