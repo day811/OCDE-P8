@@ -22,7 +22,7 @@ services:
       - AWS_REGION=${AWS_REGION}
     volumes:
       - ./config:/app/config:ro
-      - preprocessing_data:/data/clean
+      - ./data/clean:/app/data/clean
       - ./logs:/app/logs
     networks:
       - greencoop_network
@@ -40,6 +40,7 @@ services:
       dockerfile: Dockerfile
     container_name: greencoop-ingestion
     environment:
+      - DOCKMODE=true
       - MONGODB_URI=${MONGODB_URI}
       - DATABASE_NAME=${DATABASE_NAME}
       - LOCAL_STORAGE=${LOCAL_STORAGE}
@@ -51,7 +52,7 @@ services:
       - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
       - AWS_REGION=${AWS_REGION}
     volumes:
-      - preprocessing_data:/data/clean:ro
+      - ./data/clean:/app/data/clean:ro
       - ./config:/app/config:ro
       - ./logs:/app/logs
     networks:
@@ -98,6 +99,7 @@ services:
       dockerfile: Dockerfile
     container_name: greencoop-quality-checker
     environment:
+      - DOCKMODE=true
       - MONGODB_URI=${MONGODB_URI}
       - DATABASE_NAME=${DATABASE_NAME}
       - LOG_LEVEL=${LOG_LEVEL}
@@ -134,8 +136,6 @@ services:
 # ============================================================================
 
 volumes:
-  preprocessing_data:
-    driver: local
   mongodb_data:
     driver: local
 
