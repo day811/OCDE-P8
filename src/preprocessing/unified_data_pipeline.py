@@ -15,11 +15,23 @@ import os
 import argparse
 import requests
 
+
+# ============================================================================
+# LOGGING CONFIGURATION
+# ============================================================================
+
+log_level = os.getenv('LOG_LEVEL', 'INFO').upper()
+
 logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    level=getattr(logging, log_level),
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler(sys.stdout),
+        logging.FileHandler('logs/pipeline.log', mode='a', encoding='utf-8')
+    ]
 )
 logger = logging.getLogger(__name__)
+
 
 # ============================================================================
 # STRUCTURE INFOCLIMAT (source de vérité)
@@ -368,7 +380,7 @@ class JSONDataHandler(DataSourceHandler):
                     try:
                         normalized_row = {
                             'id_station': row.get('id_station'),
-                            'dh_utc': row.get('dh_utc'),
+                            'dh_utc': self._normalize_timestamp(row.get('dh_utc')),
                             'temperature': self._to_float(row.get('temperature')),
                             'pression': self._to_float(row.get('pression')),
                             'humidite': self._to_float(row.get('humidite')),
@@ -395,7 +407,27 @@ class JSONDataHandler(DataSourceHandler):
     def normalize(self) -> tuple:
         """Already normalized in read()."""
         return self.read()
-    
+        
+    def _normalize_timestamp(self, ts_str: str) -> str:
+        """
+        Convert timestamp to ISO 8601 format.
+         
+        Returns ISO 8601 string or None
+        """
+        if not ts_str or not str(ts_str).strip():
+            return None
+        
+        try:
+            # Parser accepte plusieurs formats
+            from dateutil import parser
+            dt = parser.parse(str(ts_str))
+            # ✅ Retourner ISO 8601 strict
+            return dt.strftime('%Y-%m-%dT%H:%M:%SZ')
+        except (ValueError, TypeError):
+            logger.warning(f'Invalid timestamp format: {ts_str}')
+            return None
+        
+
     def _to_float(self, value):
         if value is None or value == '' or str(value).lower() in ['null', 'nan']:
             return None
@@ -501,6 +533,11 @@ class UnifiedDataPipeline:
             "metadata": self.config['output_metadata'],
             "hourly": all_hourly
         }
+        # set filename
+        s3_path = os.getenv('S3_PATH', 'data')
+        timestamp = datetime.utcnow().strftime('%Y%m%d_%H%M%S')
+        self.filename = f"{s3_path}_{timestamp}.jsonl"
+
         
         # Determine save destination
         if local_storage and local_storage.strip():
@@ -517,8 +554,8 @@ class UnifiedDataPipeline:
         """Save to local filesystem."""
         Path(local_storage).mkdir(parents=True, exist_ok=True)
         
-        filename = os.getenv('S3_PATH', 'data')
-        output_file = f"{local_storage}/{filename}.jsonl"
+        
+        output_file = f"{local_storage}/{self.filename}"
 
         # Save as single JSONL record (one line = complete structure)
         with open(output_file, 'w', encoding='utf-8') as f:
@@ -569,8 +606,7 @@ class UnifiedDataPipeline:
             logger.info("✓ S3 connection successful")
             
             # Determine S3 path
-            timestamp = datetime.utcnow().strftime('%Y%m%d_%H%M%S')
-            s3_key = f"{s3_path}/{s3_path}_{timestamp}.jsonl"
+            s3_key = f"{s3_path}/{self.filename}"
             
             # Prepare content
             content = json.dumps(unified_structure, ensure_ascii=False, default=str) + '\n'
@@ -616,7 +652,7 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='Unified Data Pipeline')
     parser.add_argument(
-        '----config-file',
+        '--config-file',
         default=os.getenv('CONFIG_FILE','config.yaml'),
         help='Configuration file name in config/'
     )
