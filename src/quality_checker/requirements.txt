@@ -1,0 +1,4 @@
+# src/quality_checker/requirements.txt
+
+pymongo==4.6.0
+python-dotenv==1.0.0

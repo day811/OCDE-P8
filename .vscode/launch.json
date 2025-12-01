@@ -3,16 +3,14 @@
   "configurations": [
     {
       "name": "Test Preprocessing - Unified Pipeline",
-      "type": "python",
+      "type": "debugpy",
       "request": "launch",
-      "program": "${workspaceFolder}/transformation/src/preprocessing/unified_data_pipeline.py",
+      "program": "${workspaceFolder}/src/preprocessing/unified_data_pipeline.py",
       "console": "integratedTerminal",
       "justMyCode": true,
       "args": [
-        "--config",
-        "${workspaceFolder}/transformation/config/sources_config.yaml",
-        "--output-dir",
-        "${workspaceFolder}/data/clean"
+        "--config-file",
+        "config.yaml",
       ],
       "env": {
         "PYTHONPATH": "${workspaceFolder}"
@@ -21,9 +19,9 @@
     },
     {
       "name": "Test Preprocessing - Excel Handler",
-      "type": "python",
+      "type": "debugpy",
       "request": "launch",
-      "program": "${workspaceFolder}/transformation/tests/test_preprocessing.py",
+      "program": "${workspaceFolder}/tests/test_preprocessing.py",
       "console": "integratedTerminal",
       "justMyCode": true,
       "args": [
@@ -34,9 +32,9 @@
     },
     {
       "name": "Test Preprocessing - JSON Handler",
-      "type": "python",
+      "type": "debugpy",
       "request": "launch",
-      "program": "${workspaceFolder}/transformation/tests/test_preprocessing.py",
+      "program": "${workspaceFolder}/tests/test_preprocessing.py",
       "console": "integratedTerminal",
       "justMyCode": true,
       "args": [
@@ -47,12 +45,12 @@
     },
     {
       "name": "Test All Preprocessing",
-      "type": "python",
+      "type": "debugpy",
       "request": "launch",
       "program": "-m",
       "args": [
         "pytest",
-        "${workspaceFolder}/transformation/tests/test_preprocessing.py",
+        "${workspaceFolder}/tests/test_preprocessing.py",
         "-v",
         "-s"
       ],
@@ -62,12 +60,12 @@
     },
     {
       "name": "Test Data Quality",
-      "type": "python",
+      "type": "debugpy",
       "request": "launch",
       "program": "-m",
       "args": [
         "pytest",
-        "${workspaceFolder}/transformation/tests/test_data_quality.py",
+        "${workspaceFolder}/tests/test_data_quality.py",
         "-v",
         "-s"
       ],
@@ -77,12 +75,12 @@
     },
     {
       "name": "Test All Tests",
-      "type": "python",
+      "type": "debugpy",
       "request": "launch",
       "program": "-m",
       "args": [
         "pytest",
-        "${workspaceFolder}/transformation/tests/",
+        "${workspaceFolder}/tests/",
         "-v",
         "-s",
         "--tb=short"
@@ -93,18 +91,30 @@
     },
     {
       "name": "Test Ingestion - Mongo Loader",
-      "type": "python",
+      "type": "debugpy",
       "request": "launch",
-      "program": "${workspaceFolder}/transformation/src/ingestion/mongo_loader.py",
+      "program": "${workspaceFolder}/src/ingestion/mongo_loader.py",
       "console": "integratedTerminal",
       "justMyCode": true,
       "args": [
-        "--mongodb-uri",
-        "mongodb://admin:greencoop_secure_2024@localhost:27017",
-        "--database",
-        "greencoop_forecast",
-        "--input-dir",
-        "${workspaceFolder}/data/clean"
+        "--config-file",
+        "config.yaml"
+      ],
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}"
+      },
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "name": "Test Quality Checker",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/src/quality_checker/quality_checker.py",
+      "console": "integratedTerminal",
+      "justMyCode": true,
+      "args": [
+        "--config-file",
+        "config.yaml"
       ],
       "env": {
         "PYTHONPATH": "${workspaceFolder}"
@@ -113,7 +123,7 @@
     },
     {
       "name": "Python: Current File (Debug)",
-      "type": "python",
+      "type": "debugpy",
       "request": "launch",
       "program": "${file}",
       "console": "integratedTerminal",

@@ -1,4 +1,4 @@
-# transformation/src/preprocessing/unified_data_pipeline.py
+# src/preprocessing/unified_data_pipeline.py
 
 import boto3
 import json
@@ -15,11 +15,23 @@ import os
 import argparse
 import requests
 
+
+# ============================================================================
+# LOGGING CONFIGURATION
+# ============================================================================
+
+log_level = os.getenv('LOG_LEVEL', 'INFO').upper()
+
 logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    level=getattr(logging, log_level),
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler(sys.stdout),
+        logging.FileHandler('logs/pipeline.log', mode='a', encoding='utf-8')
+    ]
 )
 logger = logging.getLogger(__name__)
+
 
 # ============================================================================
 # STRUCTURE INFOCLIMAT (source de vérité)
@@ -368,7 +380,7 @@ class JSONDataHandler(DataSourceHandler):
                     try:
                         normalized_row = {
                             'id_station': row.get('id_station'),
-                            'dh_utc': row.get('dh_utc'),
+                            'dh_utc': self._normalize_timestamp(row.get('dh_utc')),
                             'temperature': self._to_float(row.get('temperature')),
                             'pression': self._to_float(row.get('pression')),
                             'humidite': self._to_float(row.get('humidite')),
@@ -395,7 +407,27 @@ class JSONDataHandler(DataSourceHandler):
     def normalize(self) -> tuple:
         """Already normalized in read()."""
         return self.read()
-    
+        
+    def _normalize_timestamp(self, ts_str: str) -> str:
+        """
+        Convert timestamp to ISO 8601 format.
+         
+        Returns ISO 8601 string or None
+        """
+        if not ts_str or not str(ts_str).strip():
+            return None
+        
+        try:
+            # Parser accepte plusieurs formats
+            from dateutil import parser
+            dt = parser.parse(str(ts_str))
+            # ✅ Retourner ISO 8601 strict
+            return dt.strftime('%Y-%m-%dT%H:%M:%SZ')
+        except (ValueError, TypeError):
+            logger.warning(f'Invalid timestamp format: {ts_str}')
+            return None
+        
+
     def _to_float(self, value):
         if value is None or value == '' or str(value).lower() in ['null', 'nan']:
             return None
@@ -420,7 +452,7 @@ class UnifiedDataPipeline:
     """Main orchestration."""
     
     def __init__(self, config_file: str):
-        self.config_file = config_file
+        self.config_file = f"./config/{config_file}"
         self.config = self._load_config()
         self.handlers = self._initialize_handlers()
     
@@ -484,7 +516,7 @@ class UnifiedDataPipeline:
         
         return all_stations, all_hourly
     
-    def save_normalized_data(self, results: Dict[str, tuple], output_dir: str = None):
+    def save_normalized_data(self, results: Dict[str, tuple], local_storage: str = None):
         """Save to JSONL files locally or to S3."""
         
         logger.info("=" * 70)
@@ -501,24 +533,29 @@ class UnifiedDataPipeline:
             "metadata": self.config['output_metadata'],
             "hourly": all_hourly
         }
+        # set filename
+        s3_path = os.getenv('S3_PATH', 'data')
+        timestamp = datetime.utcnow().strftime('%Y%m%d_%H%M%S')
+        self.filename = f"{s3_path}_{timestamp}.jsonl"
+
         
         # Determine save destination
-        if output_dir and output_dir.strip():
+        if local_storage and local_storage.strip():
             # Save locally
-            logger.info(f"Saving to local directory: {output_dir}")
-            return self._save_local(unified_structure, output_dir, all_stations, all_hourly)
+            logger.info(f"Saving to local directory: {local_storage}")
+            return self._save_local(unified_structure, local_storage, all_stations, all_hourly)
         else:
             # Save to S3
             logger.info("Saving to S3 (no local directory specified)")
             return self._save_s3(unified_structure, all_stations, all_hourly)
         
     
-    def _save_local(self, unified_structure: Dict, output_dir: str, all_stations: List, all_hourly: Dict):
+    def _save_local(self, unified_structure: Dict, local_storage: str, all_stations: List, all_hourly: Dict):
         """Save to local filesystem."""
-        Path(output_dir).mkdir(parents=True, exist_ok=True)
+        Path(local_storage).mkdir(parents=True, exist_ok=True)
         
-        filename = os.getenv('S3_PATH', 'data')
-        output_file = f"{output_dir}/{filename}.jsonl"
+        
+        output_file = f"{local_storage}/{self.filename}"
 
         # Save as single JSONL record (one line = complete structure)
         with open(output_file, 'w', encoding='utf-8') as f:
@@ -569,8 +606,7 @@ class UnifiedDataPipeline:
             logger.info("✓ S3 connection successful")
             
             # Determine S3 path
-            timestamp = datetime.utcnow().strftime('%Y%m%d_%H%M%S')
-            s3_key = f"{s3_path}/{s3_path}_{timestamp}.jsonl"
+            s3_key = f"{s3_path}/{self.filename}"
             
             # Prepare content
             content = json.dumps(unified_structure, ensure_ascii=False, default=str) + '\n'
@@ -595,10 +631,10 @@ class UnifiedDataPipeline:
             logger.error("  Falling back to local save in data/clean")
             return self._save_local(unified_structure, 'data/clean', all_stations, all_hourly)
             
-    def run(self, output_dir: str = None):
+    def run(self, local_storage: str = None):
         """Execute full pipeline."""
         results = self.process_all_sources()
-        saved_file = self.save_normalized_data(results, output_dir)
+        saved_file = self.save_normalized_data(results, local_storage)
         
         logger.info("=" * 70)
         logger.info("✅ PIPELINE COMPLETE")
@@ -616,22 +652,26 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='Unified Data Pipeline')
     parser.add_argument(
-        '--config',
-        default=os.getenv('CONFIG_FILE'),
-        help='Path to configuration file'
+        '--config-file',
+        default=os.getenv('CONFIG_FILE','config.yaml'),
+        help='Configuration file name in config/'
     )
     parser.add_argument(
-        '--output-dir',
-        default= None,
-        help='Set Output to local directory if used'
+        '--local-storage',
+        default= os.getenv('LOCAL_STORAGE','None'),
+        help='Set Output to local directory or S3(blanck/empty)'
     )
     
     args = parser.parse_args()
+    logger.info(f"Configuration file name : {args.config_file}")
+    logger.info(f"Local storage : {args.local_storage}")
+    logger.info(f"Configuration file path : {os.getenv('S3_PATH','None')}")
+    logger.info(f"S3 bucket : {os.getenv('S3_BUCKET','None')}")
 
     
     try:
-        pipeline = UnifiedDataPipeline(args.config)
-        results, saved_file = pipeline.run(args.output_dir)
+        pipeline = UnifiedDataPipeline(args.config_file)
+        results, saved_file = pipeline.run(args.local_storage)
         logger.info("✅ SUCCESS")
         sys.exit(0)
     except Exception as e:

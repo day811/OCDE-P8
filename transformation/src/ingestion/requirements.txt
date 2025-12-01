@@ -1,6 +1,0 @@
-# transformation/src/ingestion/requirements.txt
-
-pymongo==4.6.0
-pandas==2.1.4
-jsonschema==4.20.0
-python-dotenv==1.0.0
