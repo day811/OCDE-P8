@@ -31,8 +31,10 @@ except ImportError:
     HAS_BOTO3 = False
 
 # Configure logging
+log_level = os.getenv('LOG_LEVEL', 'INFO').upper()
+
 logging.basicConfig(
-    level=logging.INFO,
+    level=getattr(logging, log_level),
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[
         logging.StreamHandler(sys.stdout),
@@ -69,6 +71,11 @@ class DataSource(ABC):
 
 class LocalDataSource(DataSource):
     """Read from local filesystem."""
+
+    def __init__(self, local:str, pathname:str):
+        self.local = local
+        self.pathname = pathname
+        pass
     
     def read_file(self, path: str) -> str:
         """Read local file."""
@@ -81,8 +88,8 @@ class LocalDataSource(DataSource):
     
     def list_files(self, pattern: str) -> List[str]:
         """List local files matching pattern."""
-        base_path = Path(pattern).parent
-        glob_pattern = Path(pattern).name
+        base_path = Path(self.local)
+        glob_pattern = f"{pattern}*.jsonl"
         
         if not base_path.exists():
             logger.warning(f'Directory not found: {base_path}')
@@ -112,6 +119,8 @@ class S3DataSource(DataSource):
         
         # Initialize S3 client with explicit credentials
         self.bucket = bucket
+        self.region = region
+        self.path = path
         self.s3_client = boto3.client(
             's3',
             region_name=region,
@@ -159,10 +168,11 @@ def get_data_source(local: str, pathname: str, bucket: Optional[str] = None, reg
     """
     if local and local.strip():    
         logger.info(f'Using local data source folder: {local}')
-        return LocalDataSource(pathname)
+        logger.info(f'Using local data source folder: {local}')
+        return LocalDataSource(local,pathname)
     else:
-        logger.info(f'Using S3 data source: s3://{bucket}/{local}')
-        return S3DataSource(bucket, pathname)
+        logger.info(f'Using S3 data source: s3://{bucket}/{pathname}')
+        return S3DataSource(bucket=bucket, path=pathname,region=region)
 
 
 # ============================================================================
@@ -258,7 +268,7 @@ class SchemaManager:
                         'visibilite': {'bsonType': ['double', 'null']},
                         'vent_moyen': {'bsonType': ['double', 'null']},
                         'vent_rafales': {'bsonType': ['double', 'null']},
-                        'vent_direction': {'bsonType': ['double', 'null']},
+                        'vent_direction': {'bsonType': ['int', 'double', 'null']},
                         'pluie_3h': {'bsonType': ['double', 'null']},
                         'pluie_1h': {'bsonType': ['double', 'null']},
                         'neige_au_sol': {'bsonType': ['double', 'null']},
@@ -346,7 +356,7 @@ class DataValidator:
     @staticmethod
     def validate_station(record: Dict[str, Any]) -> Tuple[bool, Optional[str]]:
         """Validate station record."""
-        if not record.get('id_station'):
+        if not record.get('id'):
             return False, 'Missing id_station'
         
         return True, None
@@ -444,33 +454,34 @@ class DataLoader:
         Upsert station into collection.
         
         Returns:
-            'inserted', 'updated', or 'skipped'
+            'inserted' if new record
+            'updated' if existing
+            'skipped' if validation fails
+            'error' if exception
         """
+        # Validation : juste vérifier que id_station est présent
         is_valid, error = self.validator.validate_station(station)
         if not is_valid:
-            logger.debug(f'Station validation error: {error}')
+            logger.warning(f'Station validation error: {error}')
             return 'skipped'
         
-        station_id = station.get('id_station')
-        
-        # Skip if already cached
-        if station_id in self.stations_cache:
-            return 'updated'
+        station_id = station.get('id')
         
         try:
+            # ✅ Vrai upsert : MongoDB gère insert vs update automatiquement
             result = self.db[COLLECTION_STATIONS].update_one(
                 {'id_station': station_id},
                 {'$set': station},
-                upsert=True
+                upsert=True  # ← Fait le travail : insert si absent, update si présent
             )
             
-            self.stations_cache.add(station_id)
+            # upserted_id = ID créé si insert, None si update
             return 'inserted' if result.upserted_id else 'updated'
         
         except Exception as e:
-            logger.warning(f'Error upserting station {station_id}: {e}')
+            logger.error(f'Error upserting station {station_id}: {e}')
             return 'error'
-    
+        
     def _insert_observation(self, obs: Dict[str, Any], source_name: str) -> str:
         """
         Insert observation record.
@@ -480,7 +491,7 @@ class DataLoader:
         """
         is_valid, error = self.validator.validate_observation(obs)
         if not is_valid:
-            logger.debug(f'Observation validation error: {error}')
+            logger.warning(f'Observation validation error: {error}')
             return 'skipped'
         
         # Add metadata
@@ -622,6 +633,8 @@ def main():
                        help='Drop existing collections before loading')
     parser.add_argument('--report-file', default='logs/ingestion_report.txt',
                        help='Path to save ingestion report')
+    parser.add_argument('--file-select', default=os.getenv('FILE_SELECT', 'latest'),
+                       help='Select which files will be ingested : latest(default) or all')
     
     args = parser.parse_args()
     
@@ -634,6 +647,11 @@ def main():
     logger.info(f"Local storage : {args.local_storage}")
     logger.info(f"Configuration file path : {args.s3_path}")
     logger.info(f"S3 bucket : {args.s3_bucket}")
+    
+    if os.getenv('DOCKMODE'):
+        args.mongodb_uri =  str(args.mongodb_uri).replace('@localhost:', '@mongodb:')
+    else:
+        args.mongodb_uri =  str(args.mongodb_uri).replace('@mongodb:', '@localhost:')
     
     try:
         # 1. Connect
@@ -677,7 +695,7 @@ def main():
         logger.info('-' * 70)
         data_source = get_data_source(local= args.local_storage, pathname= args.s3_path, bucket= args.s3_bucket, region=args.s3_region)
         
-        jsonl_files = data_source.list_files(f'{args.local_storage}/*.jsonl' if not args.s3_bucket else f'{args.local_storage}*.jsonl')
+        jsonl_files = sorted(data_source.list_files(args.s3_path))
         
         if not jsonl_files:
             logger.warning(f'⚠️  No JSONL files found at {args.local_storage}')
@@ -691,8 +709,11 @@ def main():
             'skipped': 0,
             'errors': 0
         }
+        if args.file_select != 'all':
+            jsonl_files = jsonl_files[-1:]
+            logger.info(f'Load only latest file')
         
-        for jsonl_file in sorted(jsonl_files):
+        for jsonl_file in jsonl_files:
             logger.info(f'Loading: {jsonl_file}')
             try:
                 content = data_source.read_file(jsonl_file)
