@@ -11,11 +11,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copier le script
 COPY unified_data_pipeline.py .
 
-# Copier le config (sera monté)
-# COPY config/ ./config/
-
-# Répertoires pour logs et output
-RUN mkdir -p /app/logs /data/clean
 
 # Exécuter le script au démarrage
 ENTRYPOINT ["python", "unified_data_pipeline.py"]
