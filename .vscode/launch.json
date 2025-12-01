@@ -11,8 +11,6 @@
       "args": [
         "--config-file",
         "config.yaml",
-        "--local-storage",
-        "data/clean"
       ],
       "env": {
         "PYTHONPATH": "${workspaceFolder}"
@@ -99,8 +97,22 @@
       "console": "integratedTerminal",
       "justMyCode": true,
       "args": [
-        "--local-storage",
-        "data/clean",
+        "--config-file",
+        "config.yaml"
+      ],
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}"
+      },
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "name": "Test Quality Checker",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/src/quality_checker/quality_checker.py",
+      "console": "integratedTerminal",
+      "justMyCode": true,
+      "args": [
         "--config-file",
         "config.yaml"
       ],
