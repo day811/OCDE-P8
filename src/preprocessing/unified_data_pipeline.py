@@ -22,14 +22,25 @@ import requests
 
 log_level = os.getenv('LOG_LEVEL', 'INFO').upper()
 
+# Détecter si on est en ECS
+IS_ECS = os.getenv('SUBNET_ID') is not None
+
+handlers = [
+    logging.StreamHandler(sys.stdout),  # Toujours vers stdout
+]
+
+# En local/dev, ajouter fichier
+if not IS_ECS:
+    handlers.append(
+        logging.FileHandler('logs/preprocessing.log', mode='a', encoding='utf-8')
+    )
+
 logging.basicConfig(
     level=getattr(logging, log_level),
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.StreamHandler(sys.stdout),
-        logging.FileHandler('logs/pipeline.log', mode='a', encoding='utf-8')
-    ]
+    handlers=handlers
 )
+
 logger = logging.getLogger(__name__)
 
 
@@ -660,6 +671,11 @@ if __name__ == '__main__':
         '--local-storage',
         default= os.getenv('LOCAL_STORAGE','None'),
         help='Set Output to local directory or S3(blanck/empty)'
+    )
+    parser.add_argument(
+        '--log-to-stdout',
+        default= None,
+        help='Redirect log to stdout'
     )
     
     args = parser.parse_args()
