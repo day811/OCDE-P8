@@ -1,11 +1,14 @@
 # Environments
 .env
+.env.ecs
 .venv-source-faker
 *xlsx*/
 local-tests/
 airbyte/
 sources/
 data/clean/*.jsonl
+*-task-def.json
+*-machine.json
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
