@@ -1,0 +1,33 @@
+{
+  "family": "greencoop-preprocessing",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "1024",
+  "memory": "2048",
+  "networkMode": "awsvpc",
+  "executionRoleArn": "arn:aws:iam::$AWS_ACCOUNT_ID:role/ecsTaskExecutionRole",
+  "taskRoleArn": "arn:aws:iam::$AWS_ACCOUNT_ID:role/ecsTaskRole",
+  "containerDefinitions": [
+    {
+      "name": "preprocessing",
+      "image": "$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/greencoop/preprocessing:latest",
+      "cpu": 1024,
+      "memory": 2048,
+      "essential": true,
+      "environment": [
+        {"name": "CONFIG_FILE", "value": "$CONFIG_FILE"},
+        {"name": "LOG_LEVEL", "value": "$LOG_LEVEL"},
+        {"name": "S3_BUCKET", "value": "$S3_BUCKET"},
+        {"name": "S3_PATH", "value": "$S3_PATH"},
+        {"name": "AWS_REGION", "value": "$AWS_REGION"}
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/greencoop/preprocessing",
+          "awslogs-region": "$AWS_REGION",
+          "awslogs-stream-prefix": "ecs"
+        }
+      }
+    }
+  ]
+}

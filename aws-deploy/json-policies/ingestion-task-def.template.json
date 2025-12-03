@@ -1,0 +1,31 @@
+{
+  "family": "greencoop-ingestion",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "1024",
+  "memory": "2048",
+  "networkMode": "awsvpc",
+  "executionRoleArn": "arn:aws:iam::$AWS_ACCOUNT_ID:role/ecsTaskExecutionRole",
+  "taskRoleArn": "arn:aws:iam::$AWS_ACCOUNT_ID:role/ecsTaskRole",
+  "containerDefinitions": [
+    {
+      "name": "ingestion",
+      "image": "$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/greencoop/ingestion:latest",
+      "cpu": 1024,
+      "memory": 2048,
+      "essential": true,
+      "environment": [
+        {"name": "MONGODB_URI", "value": "$MONGODB_URI"},
+        {"name": "DATABASE_NAME", "value": "$DATABASE_NAME"},
+        {"name": "LOG_LEVEL", "value": "$LOG_LEVEL"}
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/greencoop/ingestion",
+          "awslogs-region": "$AWS_REGION",
+          "awslogs-stream-prefix": "ecs"
+        }
+      }
+    }
+  ]
+}
