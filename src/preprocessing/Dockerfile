@@ -2,14 +2,15 @@
 
 FROM python:3.11-slim
 
+# Copier le script
 WORKDIR /app
 
-# Copier requirements et installer dépendances
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+# copy sources to /app
+COPY src/preprocessing .
+COPY config.yaml .
 
-# Copier le script
-COPY unified_data_pipeline.py .
+# Installer dépendances
+RUN pip install --no-cache-dir -r requirements.txt
 
 
 # Exécuter le script au démarrage
