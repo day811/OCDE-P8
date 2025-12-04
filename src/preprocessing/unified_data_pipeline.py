@@ -463,7 +463,7 @@ class UnifiedDataPipeline:
     """Main orchestration."""
     
     def __init__(self, config_file: str):
-        self.config_file = f"./config/{config_file}"
+        self.config_file = config_file
         self.config = self._load_config()
         self.handlers = self._initialize_handlers()
     
@@ -669,7 +669,7 @@ if __name__ == '__main__':
     )
     parser.add_argument(
         '--local-storage',
-        default= os.getenv('LOCAL_STORAGE','None'),
+        default= os.getenv('LOCAL_STORAGE',None),
         help='Set Output to local directory or S3(blanck/empty)'
     )
     parser.add_argument(

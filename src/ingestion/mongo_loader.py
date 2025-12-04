@@ -691,8 +691,7 @@ def main():
         output_metadata = {}
         try:
             import yaml
-            config_path = f'config/{args.config_file}'
-            with open(config_path, 'r') as f:
+            with open(args.config_file, 'r') as f:
                 config = yaml.safe_load(f)
                 output_metadata = config.get('output_metadata', {})
                 logger.info(f'Loaded {len(output_metadata)} fields from output_metadata')
