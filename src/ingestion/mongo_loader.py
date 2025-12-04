@@ -115,33 +115,42 @@ class LocalDataSource(DataSource):
 class S3DataSource(DataSource):
     """Read from AWS S3."""
     
-    def __init__(self, bucket: str, path : str, region: str = 'eu-west-3'):
-        """Initialize S3 client with explicit credentials."""
+    def __init__(self, bucket: str, path: str, region: str = 'eu-west-3'):
+        """Initialize S3 client with IAM role (AWS) or explicit credentials (local)."""
         if not HAS_BOTO3:
             raise ImportError('boto3 required for S3 support. Install with: pip install boto3')
         
-        # Check credentials
-        access_key = os.getenv('AWS_ACCESS_KEY_ID')
-        secret_key = os.getenv('AWS_SECRET_ACCESS_KEY')
-        
-        if not access_key or not secret_key:
-            raise ValueError(
-                'AWS credentials required for S3 access:\n'
-                '  - AWS_ACCESS_KEY_ID\n'
-                '  - AWS_SECRET_ACCESS_KEY'
-            )
-        
-        # Initialize S3 client with explicit credentials
         self.bucket = bucket
         self.region = region
         self.path = path
-        self.s3_client = boto3.client(
-            's3',
-            region_name=region,
-            aws_access_key_id=access_key,
-            aws_secret_access_key=secret_key
-        )
-    
+        
+        # Déterminer le mode : ECS (IAM role) ou local (credentials explicites)
+        is_ecs = os.getenv('SUBNET_ID') is not None
+        
+        if is_ecs:
+            # Mode AWS : utiliser IAM role (pas de credentials)
+            logger.info("🔐 AWS ECS mode: Using IAM role for S3 access")
+            self.s3_client = boto3.client('s3', region_name=region)
+        else:
+            # Mode local : utiliser credentials .env
+            logger.info("💻 Local mode: Using explicit credentials")
+            access_key = os.getenv('AWS_ACCESS_KEY_ID')
+            secret_key = os.getenv('AWS_SECRET_ACCESS_KEY')
+            
+            if not access_key or not secret_key:
+                raise ValueError(
+                    'AWS credentials required for S3 access:\n'
+                    '  - AWS_ACCESS_KEY_ID\n'
+                    '  - AWS_SECRET_ACCESS_KEY'
+                )
+            
+            self.s3_client = boto3.client(
+                's3',
+                region_name=region,
+                aws_access_key_id=access_key,
+                aws_secret_access_key=secret_key
+            )  
+
     def read_file(self, s3_path: str) -> str:
         """Read file from S3."""
         try:
@@ -662,7 +671,7 @@ def main():
     logger.info(f"Configuration file path : {args.s3_path}")
     logger.info(f"S3 bucket : {args.s3_bucket}")
     
-    if os.getenv('DOCKMODE'):
+    if os.getenv('DOCKMODE') or os.getenv('SUBNET_ID'):
         args.mongodb_uri =  str(args.mongodb_uri).replace('@localhost:', '@mongodb:')
     else:
         args.mongodb_uri =  str(args.mongodb_uri).replace('@mongodb:', '@localhost:')

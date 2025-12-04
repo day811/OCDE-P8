@@ -533,8 +533,10 @@ def main():
     
     args = parser.parse_args()
     
-    if os.getenv('DOCKMODE'):
-        args.mongodb_uri =  str(args.mongodb_uri).replace('localhost:', 'mongodb:')
+    if os.getenv('DOCKMODE') or os.getenv('SUBNET_ID'):
+        args.mongodb_uri =  str(args.mongodb_uri).replace('@localhost:', '@mongodb:')
+    else:
+        args.mongodb_uri =  str(args.mongodb_uri).replace('@mongodb:', '@localhost:')
     
     Path('logs').mkdir(exist_ok=True)
     

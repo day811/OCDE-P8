@@ -579,50 +579,53 @@ class UnifiedDataPipeline:
         return output_file
     
     def _save_s3(self, unified_structure: Dict, all_stations: List, all_hourly: Dict):
-
-        """Save to S3 bucket."""
-        
-        # Get AWS credentials from .env
-        aws_access_key_id = os.getenv('AWS_ACCESS_KEY_ID')
-        aws_secret_access_key = os.getenv('AWS_SECRET_ACCESS_KEY')
+        """Save to S3 bucket (AWS IAM role or local with explicit credentials)."""
+    
         aws_region = os.getenv('AWS_REGION', 'eu-west-3')
         s3_bucket = os.getenv('S3_BUCKET')
         s3_path = os.getenv('S3_PATH', 'data')
         
-        # Validate credentials
-        if not aws_access_key_id or not aws_secret_access_key:
-            logger.error("✗ AWS credentials not found in .env file")
-            logger.error("  Please set AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY")
-            logger.error("  Falling back to local save in data/clean")
-            return self._save_local(unified_structure, 'data/clean', all_stations, all_hourly)
+        # Déterminer le mode : ECS (IAM role) ou local (credentials explicites)
+        is_ecs = os.getenv('SUBNET_ID') is not None
         
         if not s3_bucket:
-            logger.error("✗ S3_BUCKET not found in .env file")
-            logger.error("  Please set S3_BUCKET")
-            logger.error("  Falling back to local save in data/clean")
+            logger.error("✗ S3_BUCKET not found in environment")
+            logger.error(" Falling back to local save in data/clean")
             return self._save_local(unified_structure, 'data/clean', all_stations, all_hourly)
         
         try:
-            # Initialize S3 client with explicit credentials
-            s3_client = boto3.client(
-                's3',
-                region_name=aws_region,
-                aws_access_key_id=aws_access_key_id,
-                aws_secret_access_key=aws_secret_access_key
-            )
+            if is_ecs:
+                # Mode AWS : utiliser IAM role (pas de credentials)
+                logger.info("🔐 AWS ECS mode: Using IAM role for S3 access")
+                s3_client = boto3.client('s3', region_name=aws_region)
+            else:
+                # Mode local : utiliser credentials .env
+                logger.info("💻 Local mode: Using explicit credentials")
+                aws_access_key_id = os.getenv('AWS_ACCESS_KEY_ID')
+                aws_secret_access_key = os.getenv('AWS_SECRET_ACCESS_KEY')
+                
+                if not aws_access_key_id or not aws_secret_access_key:
+                    logger.error("✗ AWS credentials not found in .env")
+                    logger.error(" Please set AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY")
+                    logger.error(" Falling back to local save in data/clean")
+                    return self._save_local(unified_structure, 'data/clean', all_stations, all_hourly)
+                
+                s3_client = boto3.client(
+                    's3',
+                    region_name=aws_region,
+                    aws_access_key_id=aws_access_key_id,
+                    aws_secret_access_key=aws_secret_access_key
+                )
             
-            # Test connection
+            # Test S3 connection
             logger.info(f"Testing S3 connection to bucket: {s3_bucket}")
             s3_client.head_bucket(Bucket=s3_bucket)
             logger.info("✓ S3 connection successful")
             
-            # Determine S3 path
+            # Upload
             s3_key = f"{s3_path}/{self.filename}"
-            
-            # Prepare content
             content = json.dumps(unified_structure, ensure_ascii=False, default=str) + '\n'
             
-            # Upload to S3
             logger.info(f"Uploading to S3: s3://{s3_bucket}/{s3_key}")
             s3_client.put_object(
                 Bucket=s3_bucket,
@@ -632,14 +635,14 @@ class UnifiedDataPipeline:
             )
             
             logger.info(f"✓ {len(all_stations)} stations + {sum(len(r) for r in all_hourly.values())} records")
-            logger.info(f"  → s3://{s3_bucket}/{s3_key}")
+            logger.info(f" → s3://{s3_bucket}/{s3_key}")
             logger.info("")
             
             return f"s3://{s3_bucket}/{s3_key}"
         
         except Exception as e:
             logger.error(f"✗ S3 upload failed: {e}")
-            logger.error("  Falling back to local save in data/clean")
+            logger.error(" Falling back to local save in data/clean")
             return self._save_local(unified_structure, 'data/clean', all_stations, all_hourly)
             
     def run(self, local_storage: str = None):
