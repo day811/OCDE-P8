@@ -1,31 +1,31 @@
-2025-12-01 14:35:50,266 - __main__ - INFO - ================================================================================
-2025-12-01 14:35:50,266 - __main__ - INFO - MONGODB DATA QUALITY CHECKER - POST-INGESTION ANALYSIS
-2025-12-01 14:35:50,266 - __main__ - INFO - ================================================================================
-2025-12-01 14:35:50,266 - __main__ - INFO - 
-2025-12-01 14:35:50,266 - __main__ - INFO - STEP 1: Connecting to MongoDB
-2025-12-01 14:35:50,266 - __main__ - INFO - --------------------------------------------------------------------------------
-2025-12-01 14:35:50,266 - __main__ - INFO - Connecting to MongoDB: mongodb:27017
-2025-12-01 14:35:50,272 - __main__ - INFO - ✓ Connected to database: greencoop_forecast
-2025-12-01 14:35:50,273 - __main__ - INFO - 
-2025-12-01 14:35:50,273 - __main__ - INFO - STEP 2: Running 7 quality checks
-2025-12-01 14:35:50,273 - __main__ - INFO - --------------------------------------------------------------------------------
-2025-12-01 14:35:50,273 - __main__ - INFO - Running 7 quality checks...
-2025-12-01 14:35:50,276 - __main__ - INFO -   Check 1: Missing required fields
-2025-12-01 14:35:50,276 - __main__ - INFO -   Check 2: Duplicate records
-2025-12-01 14:35:50,285 - __main__ - INFO -   Check 3: Data ranges
-2025-12-01 14:35:50,305 - __main__ - INFO -   Check 4: Null percentages
-2025-12-01 14:35:50,326 - __main__ - INFO -   Check 5: Unique values
-2025-12-01 14:35:50,329 - __main__ - INFO -   Check 6: Type consistency
-2025-12-01 14:35:50,341 - __main__ - INFO -   Check 7: Date coverage
-2025-12-01 14:35:50,349 - __main__ - INFO - 
-2025-12-01 14:35:50,349 - __main__ - INFO - STEP 3: Generating quality report
-2025-12-01 14:35:50,349 - __main__ - INFO - --------------------------------------------------------------------------------
-2025-12-01 14:35:50,349 - __main__ - INFO - ✓ Quality report saved to: logs/quality_report.txt
-2025-12-01 14:35:50,349 - __main__ - INFO - ================================================================================
+2025-12-04 10:52:52,570 - __main__ - INFO - ================================================================================
+2025-12-04 10:52:52,570 - __main__ - INFO - MONGODB DATA QUALITY CHECKER - POST-INGESTION ANALYSIS
+2025-12-04 10:52:52,570 - __main__ - INFO - ================================================================================
+2025-12-04 10:52:52,570 - __main__ - INFO - 
+2025-12-04 10:52:52,570 - __main__ - INFO - STEP 1: Connecting to MongoDB
+2025-12-04 10:52:52,570 - __main__ - INFO - --------------------------------------------------------------------------------
+2025-12-04 10:52:52,570 - __main__ - INFO - Connecting to MongoDB: mongodb:27017
+2025-12-04 10:52:52,577 - __main__ - INFO - ✓ Connected to database: greencoop_forecast
+2025-12-04 10:52:52,577 - __main__ - INFO - 
+2025-12-04 10:52:52,577 - __main__ - INFO - STEP 2: Running 7 quality checks
+2025-12-04 10:52:52,577 - __main__ - INFO - --------------------------------------------------------------------------------
+2025-12-04 10:52:52,577 - __main__ - INFO - Running 7 quality checks...
+2025-12-04 10:52:52,580 - __main__ - INFO -   Check 1: Missing required fields
+2025-12-04 10:52:52,581 - __main__ - INFO -   Check 2: Duplicate records
+2025-12-04 10:52:52,589 - __main__ - INFO -   Check 3: Data ranges
+2025-12-04 10:52:52,611 - __main__ - INFO -   Check 4: Null percentages
+2025-12-04 10:52:52,633 - __main__ - INFO -   Check 5: Unique values
+2025-12-04 10:52:52,636 - __main__ - INFO -   Check 6: Type consistency
+2025-12-04 10:52:52,650 - __main__ - INFO -   Check 7: Date coverage
+2025-12-04 10:52:52,659 - __main__ - INFO - 
+2025-12-04 10:52:52,659 - __main__ - INFO - STEP 3: Generating quality report
+2025-12-04 10:52:52,659 - __main__ - INFO - --------------------------------------------------------------------------------
+2025-12-04 10:52:52,659 - __main__ - INFO - ✓ Quality report saved to: logs/quality_report.txt
+2025-12-04 10:52:52,659 - __main__ - INFO - ================================================================================
 MONGODB DATA QUALITY REPORT - POST-INGESTION ANALYSIS
 ================================================================================
 
-Report generated: 2025-12-01T14:35:50.276238+00:00
+Report generated: 2025-12-04T10:52:52.580689+00:00
 
 COLLECTION STATISTICS
 --------------------------------------------------------------------------------
@@ -78,6 +78,6 @@ ALERTS
 ⚠️  High null rate for nebulosite: 98.79%
 
 ================================================================================
-2025-12-01 14:35:50,350 - __main__ - INFO - ✓ Disconnected from MongoDB
-2025-12-01 14:35:50,350 - __main__ - INFO - 
-2025-12-01 14:35:50,350 - __main__ - INFO - ✅ SUCCESS - Quality check completed
+2025-12-04 10:52:52,659 - __main__ - INFO - ✓ Disconnected from MongoDB
+2025-12-04 10:52:52,659 - __main__ - INFO - 
+2025-12-04 10:52:52,659 - __main__ - INFO - ✅ SUCCESS - Quality check completed

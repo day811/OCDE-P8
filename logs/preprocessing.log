@@ -1,0 +1,79 @@
+2025-12-04 10:52:38,597 - __main__ - INFO - Configuration file name : config.yaml
+2025-12-04 10:52:38,597 - __main__ - INFO - Local storage : data/clean
+2025-12-04 10:52:38,597 - __main__ - INFO - Configuration file path : weather_data_unified
+2025-12-04 10:52:38,597 - __main__ - INFO - S3 bucket : greencoop-forecast-raw-data
+2025-12-04 10:52:38,601 - __main__ - INFO -     Downloading from: https://s3.eu-west-1.amazonaws.com/course.oc-static.com/projects/922_Data+Engineer/922_P8/Weather+Underground+-+La+Madeleine%2C+FR.xlsx
+2025-12-04 10:52:38,877 - __main__ - INFO -     ✓ Downloaded to: /tmp/Weather+Underground+-+La+Madeleine%2C+FR.xlsx
+2025-12-04 10:52:38,878 - __main__ - INFO -     Downloading from: https://s3.eu-west-1.amazonaws.com/course.oc-static.com/projects/922_Data+Engineer/922_P8/Weather+Underground+-+Ichtegem%2C+BE.xlsx
+2025-12-04 10:52:39,168 - __main__ - INFO -     ✓ Downloaded to: /tmp/Weather+Underground+-+Ichtegem%2C+BE.xlsx
+2025-12-04 10:52:39,169 - __main__ - INFO -     Downloading from: https://s3.eu-west-1.amazonaws.com/course.oc-static.com/projects/922_Data+Engineer/922_P8/Data_Source1_011024-071024.json
+2025-12-04 10:52:39,512 - __main__ - INFO -     ✓ Downloaded to: /tmp/Data_Source1_011024-071024.json
+2025-12-04 10:52:39,513 - __main__ - INFO - ======================================================================
+2025-12-04 10:52:39,513 - __main__ - INFO - UNIFIED DATA PIPELINE - Processing All Sources
+2025-12-04 10:52:39,513 - __main__ - INFO - ======================================================================
+2025-12-04 10:52:39,513 - __main__ - INFO - 
+2025-12-04 10:52:39,513 - __main__ - INFO - Processing source: Weather Underground
+2025-12-04 10:52:39,649 - __main__ - INFO -     Found 7 sheets
+2025-12-04 10:52:39,649 - __main__ - INFO -     Reading sheet: 011024
+2025-12-04 10:52:39,761 - __main__ - INFO -       → 288 rows
+2025-12-04 10:52:39,766 - __main__ - INFO -     Reading sheet: 021024
+2025-12-04 10:52:39,853 - __main__ - INFO -       → 288 rows
+2025-12-04 10:52:39,858 - __main__ - INFO -     Reading sheet: 031024
+2025-12-04 10:52:39,945 - __main__ - INFO -       → 288 rows
+2025-12-04 10:52:39,949 - __main__ - INFO -     Reading sheet: 041024
+2025-12-04 10:52:40,055 - __main__ - INFO -       → 288 rows
+2025-12-04 10:52:40,059 - __main__ - INFO -     Reading sheet: 051024
+2025-12-04 10:52:40,145 - __main__ - INFO -       → 288 rows
+2025-12-04 10:52:40,150 - __main__ - INFO -     Reading sheet: 061024
+2025-12-04 10:52:40,236 - __main__ - INFO -       → 288 rows
+2025-12-04 10:52:40,240 - __main__ - INFO -     Reading sheet: 071024
+2025-12-04 10:52:40,337 - __main__ - INFO -       → 180 rows
+2025-12-04 10:52:40,340 - __main__ - INFO -   ✓ Read 1 stations
+2025-12-04 10:52:40,340 - __main__ - INFO -   ✓ Read 1908 records total
+2025-12-04 10:52:40,341 - __main__ - INFO -   ✓ After filtering: 1908 records
+2025-12-04 10:52:40,341 - __main__ - INFO - ✓ wunderground_ilamad25: 1 stations, 1908 records
+2025-12-04 10:52:40,341 - __main__ - INFO - 
+2025-12-04 10:52:40,341 - __main__ - INFO - Processing source: Weather Underground
+2025-12-04 10:52:40,416 - __main__ - INFO -     Found 7 sheets
+2025-12-04 10:52:40,416 - __main__ - INFO -     Reading sheet: 011024
+2025-12-04 10:52:40,511 - __main__ - INFO -       → 288 rows
+2025-12-04 10:52:40,515 - __main__ - INFO -     Reading sheet: 021024
+2025-12-04 10:52:40,627 - __main__ - INFO -       → 285 rows
+2025-12-04 10:52:40,631 - __main__ - INFO -     Reading sheet: 031024
+2025-12-04 10:52:40,725 - __main__ - INFO -       → 284 rows
+2025-12-04 10:52:40,729 - __main__ - INFO -     Reading sheet: 041024
+2025-12-04 10:52:40,824 - __main__ - INFO -       → 288 rows
+2025-12-04 10:52:40,829 - __main__ - INFO -     Reading sheet: 051024
+2025-12-04 10:52:40,943 - __main__ - INFO -       → 288 rows
+2025-12-04 10:52:40,947 - __main__ - INFO -     Reading sheet: 061024
+2025-12-04 10:52:41,041 - __main__ - INFO -       → 288 rows
+2025-12-04 10:52:41,045 - __main__ - INFO -     Reading sheet: 071024
+2025-12-04 10:52:41,133 - __main__ - INFO -       → 178 rows
+2025-12-04 10:52:41,136 - __main__ - INFO -   ✓ Read 1 stations
+2025-12-04 10:52:41,136 - __main__ - INFO -   ✓ Read 1899 records total
+2025-12-04 10:52:41,137 - __main__ - INFO -   ✓ After filtering: 1899 records
+2025-12-04 10:52:41,137 - __main__ - INFO - ✓ wunderground_iichte19: 1 stations, 1899 records
+2025-12-04 10:52:41,137 - __main__ - INFO - 
+2025-12-04 10:52:41,137 - __main__ - INFO - Processing source: InfoClimat
+2025-12-04 10:52:41,140 - __main__ - INFO -     Extracted 4 stations from metadata
+2025-12-04 10:52:41,140 - __main__ - INFO -     Station 07015: 60 records
+2025-12-04 10:52:41,143 - __main__ - INFO -     Station 00052: 361 records
+2025-12-04 10:52:41,157 - __main__ - INFO -     Station 000R5: 361 records
+2025-12-04 10:52:41,172 - __main__ - INFO -     Station STATIC0010: 361 records
+2025-12-04 10:52:41,187 - __main__ - INFO -   ✓ Read 4 stations
+2025-12-04 10:52:41,187 - __main__ - INFO -   ✓ Read 1143 records total
+2025-12-04 10:52:41,188 - __main__ - INFO -   ✓ After filtering: 1143 records
+2025-12-04 10:52:41,188 - __main__ - INFO - ✓ infoclimat: 4 stations, 1143 records
+2025-12-04 10:52:41,188 - __main__ - INFO - 
+2025-12-04 10:52:41,188 - __main__ - INFO - ======================================================================
+2025-12-04 10:52:41,188 - __main__ - INFO - Saving Normalized Data to JSONL
+2025-12-04 10:52:41,188 - __main__ - INFO - ======================================================================
+2025-12-04 10:52:41,188 - __main__ - INFO - 
+2025-12-04 10:52:41,188 - __main__ - INFO - Saving to local directory: data/clean
+2025-12-04 10:52:41,209 - __main__ - INFO - ✓ 6 stations + 4950 records
+2025-12-04 10:52:41,209 - __main__ - INFO -   → data/clean/weather_data_unified_20251204_105241.jsonl
+2025-12-04 10:52:41,209 - __main__ - INFO - 
+2025-12-04 10:52:41,209 - __main__ - INFO - ======================================================================
+2025-12-04 10:52:41,209 - __main__ - INFO - ✅ PIPELINE COMPLETE
+2025-12-04 10:52:41,209 - __main__ - INFO - ======================================================================
+2025-12-04 10:52:41,209 - __main__ - INFO - ✅ SUCCESS
