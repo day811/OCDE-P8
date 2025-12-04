@@ -1,35 +1,33 @@
 #!/bin/bash
 set -e
-
 source .env.ecs
+
+# Parse arguments
+BUILD=true
+if [[ "$1" == "--no-build" ]]; then
+    BUILD=false
+fi
 
 # Login ECR
 aws ecr get-login-password --region $AWS_REGION | \
   docker login --username AWS --password-stdin \
   $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
 
-# Build et push preprocessing
-cd src/preprocessing
-docker build -t greencoop/preprocessing:latest .
-docker tag greencoop/preprocessing:latest \
-  $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/greencoop/preprocessing:latest
-docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/greencoop/preprocessing:latest
-cd ../..
+for SERVICE in preprocessing ingestion quality-checker; do
+    IMAGE_NAME="greencoop/$SERVICE"
+    ECR_URI="$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$IMAGE_NAME:latest"
+    DOCKERFILE="src/${SERVICE//-/_}/Dockerfile"
+    
+    if [[ "$BUILD" == true ]]; then
+        echo "🔨 Build $SERVICE..."
+        docker build -t $IMAGE_NAME:latest -f $DOCKERFILE .
+    fi
+    
+    echo "🏷️  Tag $SERVICE..."
+    docker tag $IMAGE_NAME:latest $ECR_URI
+    
+    echo "📤 Push $SERVICE..."
+    docker push $ECR_URI
+done
 
-# Build et push ingestion
-cd src/ingestion
-docker build -t greencoop/ingestion:latest .
-docker tag greencoop/ingestion:latest \
-  $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/greencoop/ingestion:latest
-docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/greencoop/ingestion:latest
-cd ../..
-
-# Build et push quality-checker
-cd src/quality_checker
-docker build -t greencoop/quality-checker:latest .
-docker tag greencoop/quality-checker:latest \
-  $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/greencoop/quality-checker:latest
-docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/greencoop/quality-checker:latest
-cd ../..
-
-echo "✓ Toutes les images pushées vers ECR"
+echo "✓ Terminé"
