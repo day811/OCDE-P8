@@ -93,8 +93,8 @@ services:
 
   quality_checker:
     build:
-      context: ./src/quality_checker
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: src/quality_checker/Dockerfile
     container_name: greencoop-quality-checker
     environment:
       - DOCKMODE=true
