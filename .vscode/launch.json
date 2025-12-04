@@ -10,7 +10,9 @@
       "justMyCode": true,
       "args": [
         "--config-file",
-        "config.yaml"
+        "config.yaml",
+        "--local-storage",
+        "data/clean"
       ],
       "env": {
         "PYTHONPATH": "${workspaceFolder}"
@@ -98,7 +100,9 @@
       "justMyCode": true,
       "args": [
         "--config-file",
-        "config.yaml"
+        "config.yaml",
+        "--local-storage",
+        "data/clean"
       ],
       "env": {
         "PYTHONPATH": "${workspaceFolder}"
