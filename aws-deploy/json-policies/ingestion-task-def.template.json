@@ -14,6 +14,7 @@
       "memory": 2048,
       "essential": true,
       "environment": [
+        {"name": "SUBNET_ID", "value": "xxxxxxxx"}, 
         {"name": "MONGODB_URI", "value": "$MONGODB_URI"},
         {"name": "DATABASE_NAME", "value": "$DATABASE_NAME"},
         {"name": "LOG_LEVEL", "value": "$LOG_LEVEL"}

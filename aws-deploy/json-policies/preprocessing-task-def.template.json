@@ -14,6 +14,7 @@
       "memory": 2048,
       "essential": true,
       "environment": [
+        {"name": "SUBNET_ID", "value": "xxxxxxxx"}, 
         {"name": "CONFIG_FILE", "value": "$CONFIG_FILE"},
         {"name": "LOG_LEVEL", "value": "$LOG_LEVEL"},
         {"name": "S3_BUCKET", "value": "$S3_BUCKET"},
