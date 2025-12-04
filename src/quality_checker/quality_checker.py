@@ -19,16 +19,33 @@ import argparse
 from pymongo import MongoClient
 from pymongo.errors import ConnectionFailure
 
-# Configure logging
+# ============================================================================
+# LOGGING CONFIGURATION
+# ============================================================================
+
+log_level = os.getenv('LOG_LEVEL', 'INFO').upper()
+
+# Détecter si on est en ECS
+IS_ECS = os.getenv('SUBNET_ID') is not None
+
+handlers = [
+    logging.StreamHandler(sys.stdout),  # Toujours vers stdout
+]
+
+# En local/dev, ajouter fichier
+if not IS_ECS:
+    handlers.append(
+        logging.FileHandler('logs/preprocessing.log', mode='a', encoding='utf-8')
+    )
+
 logging.basicConfig(
-    level=logging.INFO,
+    level=getattr(logging, log_level),
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.StreamHandler(sys.stdout),
-        logging.FileHandler('logs/quality_checker.log', mode='a', encoding='utf-8')
-    ]
+    handlers=handlers
 )
+
 logger = logging.getLogger(__name__)
+
 
 # ============================================================================
 # CONSTANTS
