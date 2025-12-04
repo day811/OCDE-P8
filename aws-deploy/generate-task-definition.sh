@@ -17,7 +17,7 @@ echo ""
 
 # Générer chaque template
 for template in json-policies/*-task-def.template.json json-policies/pipeline-state-machine.template.json; do
-    output="json-policies/${template%.template.json}.json"
+    output="${template%.template.json}.json"
     
     echo "🔄 Génération : $output"
     envsubst < "$template" > "$output"
