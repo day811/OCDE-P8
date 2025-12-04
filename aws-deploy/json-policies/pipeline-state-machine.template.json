@@ -1,137 +1,75 @@
 {
-  "Comment": "Greencoop Data Pipeline - Sequential Execution",
-  "StartAt": "StartMongoDB",
+  "Comment": "Greencoop Data Pipeline - Python-only tasks",
+  "StartAt": "RunPreprocessing",
   "States": {
-    "StartMongoDB": {
-      "Type": "Task",
-      "Resource": "arn:aws:states:::ecs:runTask.sync",
-      "Parameters": {
-        "LaunchType": "FARGATE",
-        "Cluster": "greencoop-cluster",
-        "TaskDefinition": "greencoop-mongodb:1",
-        "NetworkConfiguration": {
-          "AwsvpcConfiguration": {
-            "Subnets": ["$(ECS_SUBNET_ID)"],
-            "SecurityGroups": ["$(ECS_SECURITY_GROUP_ID)"],
-            "AssignPublicIp": "ENABLED"
-          }
-        },
-        "Overrides": {
-          "ContainerOverrides": [
-            {
-              "Name": "mongodb",
-              "Environment": [
-                {"Name": "MONGO_INITDB_ROOT_PASSWORD", "Value": "$MONGO_PASSWORD"}
-              ]
-            }
-          ]
-        }
-      },
-      "Next": "WaitForMongoDB",
-      "Catch": [
-        {
-          "ErrorEquals": ["States.ALL"],
-          "Next": "PipelineFailed"
-        }
-      ],
-      "Retry": [
-        {
-          "ErrorEquals": ["States.TaskFailed"],
-          "IntervalSeconds": 2,
-          "MaxAttempts": 3,
-          "BackoffRate": 2.0
-        }
-      ]
-    },
-    "WaitForMongoDB": {
-      "Type": "Wait",
-      "Seconds": 10,
-      "Next": "RunPreprocessing"
-    },
     "RunPreprocessing": {
       "Type": "Task",
       "Resource": "arn:aws:states:::ecs:runTask.sync",
       "Parameters": {
         "LaunchType": "FARGATE",
         "Cluster": "greencoop-cluster",
-        "TaskDefinition": "greencoop-preprocessing:1",
+        "TaskDefinition": "greencoop-preprocessing",
         "NetworkConfiguration": {
           "AwsvpcConfiguration": {
-            "Subnets": ["$(ECS_SUBNET_ID)"],
-            "SecurityGroups": ["$(ECS_SECURITY_GROUP_ID)"],
+            "Subnets": ["$SUBNET_ID"],
+            "SecurityGroups": ["$SECURITY_GROUP_ID"],
             "AssignPublicIp": "ENABLED"
           }
         }
       },
-      "Next": "PreprocessingSucceeded",
+      "Next": "RunIngestion",
       "Catch": [
-        {
-          "ErrorEquals": ["States.ALL"],
-          "Next": "PipelineFailed"
-        }
+        { "ErrorEquals": ["States.ALL"], "Next": "PipelineFailed" }
       ]
     },
-    "PreprocessingSucceeded": {
-      "Type": "Pass",
-      "Next": "RunIngestion"
-    },
+
     "RunIngestion": {
       "Type": "Task",
       "Resource": "arn:aws:states:::ecs:runTask.sync",
       "Parameters": {
         "LaunchType": "FARGATE",
         "Cluster": "greencoop-cluster",
-        "TaskDefinition": "greencoop-ingestion:1",
+        "TaskDefinition": "greencoop-ingestion",
         "NetworkConfiguration": {
           "AwsvpcConfiguration": {
-            "Subnets": ["$(ECS_SUBNET_ID)"],
-            "SecurityGroups": ["$(ECS_SECURITY_GROUP_ID)"],
+            "Subnets": ["$SUBNET_ID"],
+            "SecurityGroups": ["$SECURITY_GROUP_ID"],
             "AssignPublicIp": "ENABLED"
           }
         }
       },
-      "Next": "IngestionSucceeded",
+      "Next": "RunQualityChecker",
       "Catch": [
-        {
-          "ErrorEquals": ["States.ALL"],
-          "Next": "PipelineFailed"
-        }
+        { "ErrorEquals": ["States.ALL"], "Next": "PipelineFailed" }
       ]
     },
-    "IngestionSucceeded": {
-      "Type": "Pass",
-      "Next": "RunQualityChecker"
-    },
+
     "RunQualityChecker": {
       "Type": "Task",
       "Resource": "arn:aws:states:::ecs:runTask.sync",
       "Parameters": {
         "LaunchType": "FARGATE",
         "Cluster": "greencoop-cluster",
-        "TaskDefinition": "greencoop-quality-checker:1",
+        "TaskDefinition": "greencoop-quality-checker",
         "NetworkConfiguration": {
           "AwsvpcConfiguration": {
-            "Subnets": ["$(ECS_SUBNET_ID)"],
-            "SecurityGroups": ["$(ECS_SECURITY_GROUP_ID)"],
+            "Subnets": ["$SUBNET_ID"],
+            "SecurityGroups": ["$SECURITY_GROUP_ID"],
             "AssignPublicIp": "ENABLED"
           }
         }
       },
       "Next": "PipelineSucceeded",
       "Catch": [
-        {
-          "ErrorEquals": ["States.ALL"],
-          "Next": "PipelineFailed"
-        }
+        { "ErrorEquals": ["States.ALL"], "Next": "PipelineFailed" }
       ]
     },
-    "PipelineSucceeded": {
-      "Type": "Succeed"
-    },
+
+    "PipelineSucceeded": { "Type": "Succeed" },
     "PipelineFailed": {
       "Type": "Fail",
       "Error": "PipelineExecutionFailed",
-      "Cause": "One or more tasks in the pipeline failed"
+      "Cause": "A step in the data pipeline failed"
     }
   }
 }
