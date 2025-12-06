@@ -111,6 +111,32 @@ services:
     restart: on-failure
 
 # ============================================================================
+# SERVICE 4 : PERFORMANCE
+# ============================================================================
+
+  performance:
+    build:
+      context: .
+      dockerfile: src/performance/Dockerfile
+    container_name: greencoop-performance
+    environment:
+      - DOCKMODE=true
+      - MONGODB_URI=${MONGODB_URI}
+      - DATABASE_NAME=${DATABASE_NAME}
+      - LOG_LEVEL=${LOG_LEVEL}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_REGION=${AWS_REGION}
+    volumes:
+      - ./logs:/app/logs
+    networks:
+      - greencoop_network
+    depends_on:
+      quality_checker:
+        condition: service_completed_successfully
+    restart: on-failure
+
+# ============================================================================
 # VOLUMES
 # ============================================================================
 
