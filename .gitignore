@@ -10,6 +10,7 @@ data/clean/*.jsonl
 *-task-def.json
 *-machine.json
 *secret*
+build/*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
