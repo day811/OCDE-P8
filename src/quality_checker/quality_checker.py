@@ -35,7 +35,7 @@ handlers = [
 # En local/dev, ajouter fichier
 if not IS_ECS:
     handlers.append(
-        logging.FileHandler('logs/preprocessing.log', mode='a', encoding='utf-8')
+        logging.FileHandler('logs/quality_checker.log', mode='a', encoding='utf-8')
     )
 
 logging.basicConfig(
