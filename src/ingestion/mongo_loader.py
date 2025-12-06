@@ -282,7 +282,7 @@ class SchemaManager:
                     'properties': {
                         '_id': {'bsonType': 'objectId'},
                         'id_station': {'bsonType': 'string'},
-                        'dh_utc': {'bsonType': 'string'},
+                        'dh_utc': {'bsonType': 'date'},
                         # Measurement fields (all optional, can be null)
                         'temperature': {'bsonType': ['double', 'null']},
                         'pression': {'bsonType': ['double', 'null']},
@@ -360,10 +360,13 @@ class DataValidator:
         if not record.get('dh_utc'):
             return False, 'Missing dh_utc'
         
-        # Timestamp format check
+        # Timestamp format check (peut être string ISO ou datetime après conversion)
         timestamp = record.get('dh_utc', '')
-        if not isinstance(timestamp, str) or 'T' not in timestamp or 'Z' not in timestamp:
-            return False, f'Invalid ISO 8601 timestamp: {timestamp}'
+        if isinstance(timestamp, str):
+            # String ISO format
+            if 'T' not in timestamp:
+                return False, f'Invalid ISO 8601 timestamp: {timestamp}'
+        # datetime object est OK aussi
         
         # At least one measurement required
         measurement_fields = [
@@ -515,6 +518,15 @@ class DataLoader:
         is_valid, error = self.validator.validate_observation(obs)
         if not is_valid:
             logger.warning(f'Observation validation error: {error}')
+            return 'skipped'
+        
+        # ✅ CONVERSION : String ISO → datetime Python (devient BSON Date)
+        try:
+            iso_string = obs.get('dh_utc')
+            # Parse la string ISO 8601 et convertit en datetime Python
+            obs['dh_utc'] = datetime.fromisoformat(iso_string.replace('Z', '+00:00'))
+        except Exception as e:
+            logger.warning(f'Failed to parse dh_utc {obs.get("dh_utc")}: {e}')
             return 'skipped'
         
         # Add metadata
