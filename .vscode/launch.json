@@ -126,6 +126,21 @@
       "cwd": "${workspaceFolder}"
     },
     {
+      "name": "Test Performance",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/src/performance/lambda_function.py",
+      "console": "integratedTerminal",
+      "justMyCode": true,
+      "args": [
+        "2024-10-05"
+      ],
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}"
+      },
+      "cwd": "${workspaceFolder}"
+    },
+    {
       "name": "Python: Current File (Debug)",
       "type": "debugpy",
       "request": "launch",
