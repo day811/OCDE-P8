@@ -1,6 +1,5 @@
 # src/ingestion/requirements.txt
 
 pymongo==4.6.0
-python-dotenv==1.0.0
 boto3==1.41.5
 PyYAML==6.0.3
