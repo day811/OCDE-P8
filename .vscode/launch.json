@@ -9,10 +9,56 @@
       "console": "integratedTerminal",
       "justMyCode": true,
       "args": [
-        "--config-file",
-        "config.yaml",
         "--local-storage",
-        "data/clean"
+        "True"
+      ],
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}"
+      },
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "name": "Test Ingestion - Mongo Loader",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/src/ingestion/mongo_loader.py",
+      "console": "integratedTerminal",
+      "justMyCode": true,
+      "args": [
+        "--local-storage",
+        "True"
+      ],
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}"
+      },
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "name": "Test Quality Checker",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/src/quality_checker/quality_checker.py",
+      "console": "integratedTerminal",
+      "justMyCode": true,
+      "args": [
+     ],
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}"
+      },
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "name": "Test Performance",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/src/performance/lambda_function.py",
+      "console": "integratedTerminal",
+      "justMyCode": true,
+      "args": [
+        "--target-date",
+        "2024-10-05",
+        "--metrix-env",
+        "None"
       ],
       "env": {
         "PYTHONPATH": "${workspaceFolder}"
@@ -91,55 +137,7 @@
       "justMyCode": true,
       "cwd": "${workspaceFolder}"
     },
-    {
-      "name": "Test Ingestion - Mongo Loader",
-      "type": "debugpy",
-      "request": "launch",
-      "program": "${workspaceFolder}/src/ingestion/mongo_loader.py",
-      "console": "integratedTerminal",
-      "justMyCode": true,
-      "args": [
-        "--config-file",
-        "config.yaml",
-        "--local-storage",
-        "data/clean"
-      ],
-      "env": {
-        "PYTHONPATH": "${workspaceFolder}"
-      },
-      "cwd": "${workspaceFolder}"
-    },
-    {
-      "name": "Test Quality Checker",
-      "type": "debugpy",
-      "request": "launch",
-      "program": "${workspaceFolder}/src/quality_checker/quality_checker.py",
-      "console": "integratedTerminal",
-      "justMyCode": true,
-      "args": [
-        "--config-file",
-        "config.yaml"
-      ],
-      "env": {
-        "PYTHONPATH": "${workspaceFolder}"
-      },
-      "cwd": "${workspaceFolder}"
-    },
-    {
-      "name": "Test Performance",
-      "type": "debugpy",
-      "request": "launch",
-      "program": "${workspaceFolder}/src/performance/lambda_function.py",
-      "console": "integratedTerminal",
-      "justMyCode": true,
-      "args": [
-        "2024-10-05"
-      ],
-      "env": {
-        "PYTHONPATH": "${workspaceFolder}"
-      },
-      "cwd": "${workspaceFolder}"
-    },
+
     {
       "name": "Python: Current File (Debug)",
       "type": "debugpy",
