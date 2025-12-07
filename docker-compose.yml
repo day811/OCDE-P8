@@ -12,6 +12,7 @@ services:
       dockerfile: src/preprocessing/Dockerfile
     container_name: greencoop-preprocessing
     environment:
+      - RUN_MODE=docker
       - CONFIG_FILE=${CONFIG_FILE}
       - LOCAL_STORAGE=${LOCAL_STORAGE}
       - LOG_LEVEL=${LOG_LEVEL}
@@ -39,7 +40,7 @@ services:
       dockerfile: src/ingestion/Dockerfile
     container_name: greencoop-ingestion
     environment:
-      - DOCKMODE=true
+      - RUN_MODE=docker
       - MONGODB_URI=${MONGODB_URI}
       - DATABASE_NAME=${DATABASE_NAME}
       - LOCAL_STORAGE=${LOCAL_STORAGE}
@@ -97,7 +98,7 @@ services:
       dockerfile: src/quality_checker/Dockerfile
     container_name: greencoop-quality-checker
     environment:
-      - DOCKMODE=true
+      - RUN_MODE=docker
       - MONGODB_URI=${MONGODB_URI}
       - DATABASE_NAME=${DATABASE_NAME}
       - LOG_LEVEL=${LOG_LEVEL}
@@ -120,7 +121,7 @@ services:
       dockerfile: src/performance/Dockerfile
     container_name: greencoop-performance
     environment:
-      - DOCKMODE=true
+      - RUN_MODE=docker
       - MONGODB_URI=${MONGODB_URI}
       - DATABASE_NAME=${DATABASE_NAME}
       - LOG_LEVEL=${LOG_LEVEL}

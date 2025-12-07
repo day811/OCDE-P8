@@ -37,7 +37,8 @@ except ImportError:
 log_level = os.getenv('LOG_LEVEL', 'INFO').upper()
 
 # Détecter si on est en ECS
-IS_ECS = os.getenv('SUBNET_ID') is not None
+RUN_MODE = os.getenv('RUN_MODE','shell')
+IS_ECS = RUN_MODE == 'ecs'
 
 handlers = [
     logging.StreamHandler(sys.stdout),  # Toujours vers stdout
@@ -86,9 +87,9 @@ class DataSource(ABC):
 class LocalDataSource(DataSource):
     """Read from local filesystem."""
 
-    def __init__(self, local:str, pathname:str):
-        self.local = local
+    def __init__(self, pathname:str, filename:str):
         self.pathname = pathname
+        self.filename = filename
         pass
     
     def read_file(self, path: str) -> str:
@@ -102,7 +103,7 @@ class LocalDataSource(DataSource):
     
     def list_files(self, pattern: str) -> List[str]:
         """List local files matching pattern."""
-        base_path = Path(self.local)
+        base_path = Path(self.pathname)
         glob_pattern = f"{pattern}*.jsonl"
         
         if not base_path.exists():
@@ -176,7 +177,7 @@ class S3DataSource(DataSource):
 # DATA SOURCE FACTORY
 # ============================================================================
 
-def get_data_source(local: str, pathname: str, bucket: Optional[str] = None, region :  Optional[str] = None) -> DataSource:
+def get_data_source(local_storage: bool, pathname: str, bucket: Optional[str] = None, region :  Optional[str] = None) -> DataSource:
     """
     Determine data source based on input path.
     
@@ -189,10 +190,9 @@ def get_data_source(local: str, pathname: str, bucket: Optional[str] = None, reg
     Returns:
         Appropriate DataSource implementation
     """
-    if local and local.strip():    
-        logger.info(f'Using local data source folder: {local}')
-        logger.info(f'Using local data source folder: {local}')
-        return LocalDataSource(local,pathname)
+    if local_storage:    
+        logger.info(f'Using local data source folder: data/clean')
+        return LocalDataSource('data/clean/',pathname)
     else:
         logger.info(f'Using S3 data source: s3://{bucket}/{pathname}')
         return S3DataSource(bucket=bucket, path=pathname,region=region)
@@ -649,44 +649,23 @@ class IngestionReportGenerator:
 
 def main():
     """Main entry point."""
-    parser = argparse.ArgumentParser(description='Load JSONL data into MongoDB (normalized schema)')
-    parser.add_argument('--mongodb-uri', default=os.getenv('MONGODB_URI', 'mongodb://localhost:27017'),
-                       help='MongoDB connection URI')
-    parser.add_argument('--database', default=os.getenv('DATABASE_NAME', 'greencoop_forecast'),
-                       help='Target database name')
-    parser.add_argument('--local-storage', default=os.getenv('LOCAL_STORAGE', None),
-                       help='Local path containing JSONL files')
-    parser.add_argument('--s3-bucket', default=os.getenv('S3_BUCKET', None),
-                       help='S3 bucket name (if reading from S3)')
-    parser.add_argument('--s3-path', default=os.getenv('S3_PATH'),
-                       help='S3 path (always used as filename)')
-    parser.add_argument('--s3-region', default=os.getenv('AWS_REGION','eu-west-3'),
-                       help='S3 bucket region')
-    parser.add_argument('--config-file', default=os.getenv('CONFIG_FILE', 'sources_config.yaml'),
-                       help='Path to sources_config.yaml for output_metadata')
-    parser.add_argument('--drop-collections', action='store_true',
-                       help='Drop existing collections before loading')
-    parser.add_argument('--report-file', default='logs/ingestion_report.txt',
-                       help='Path to save ingestion report')
-    parser.add_argument('--file-select', default=os.getenv('FILE_SELECT', 'latest'),
-                       help='Select which files will be ingested : latest(default) or all')
-    
-    args = parser.parse_args()
-    
+
+
     Path('logs').mkdir(exist_ok=True)
-    
+  
+
     logger.info('=' * 70)
     logger.info('MONGODB DATA INGESTION PIPELINE - LOADING PHASE')
     logger.info('=' * 70)
     logger.info(f"Configuration file name : {args.config_file}")
-    logger.info(f"Local storage : {args.local_storage}")
+    logger.info(f"Local storage : {str(args.local_storage)}")
     logger.info(f"Configuration file path : {args.s3_path}")
     logger.info(f"S3 bucket : {args.s3_bucket}")
     
-    if os.getenv('DOCKMODE') or os.getenv('SUBNET_ID'):
-        args.mongodb_uri =  str(args.mongodb_uri).replace('@localhost:', '@mongodb:')
-    else:
+    if RUN_MODE == 'shell':
         args.mongodb_uri =  str(args.mongodb_uri).replace('@mongodb:', '@localhost:')
+    else:
+        args.mongodb_uri =  str(args.mongodb_uri).replace('@localhost:', '@mongodb:')
     
     try:
         # 1. Connect
@@ -727,7 +706,7 @@ def main():
         # 4. Load data
         logger.info('STEP 4: Loading observations and stations')
         logger.info('-' * 70)
-        data_source = get_data_source(local= args.local_storage, pathname= args.s3_path, bucket= args.s3_bucket, region=args.s3_region)
+        data_source = get_data_source(local_storage= args.local_storage, pathname= args.s3_path, bucket= args.s3_bucket, region=args.s3_region)
         
         jsonl_files = sorted(data_source.list_files(args.s3_path))
         
@@ -788,4 +767,31 @@ def main():
 
 
 if __name__ == '__main__':
+
+    parser = argparse.ArgumentParser(description='Load JSONL data into MongoDB (normalized schema)')
+    parser.add_argument('--mongodb-uri', default=os.getenv('MONGODB_URI', 'mongodb://localhost:27017'),
+                       help='MongoDB connection URI')
+    parser.add_argument('--database', default=os.getenv('DATABASE_NAME', 'greencoop_forecast'),
+                       help='Target database name')
+    parser.add_argument('--local-storage', default=os.getenv('LOCAL_STORAGE',False),
+                       type=bool, help='Local storage')
+    parser.add_argument('--s3-bucket', default=os.getenv('S3_BUCKET', None),
+                       help='S3 bucket name (if reading from S3)')
+    parser.add_argument('--s3-path', default=os.getenv('S3_PATH'),
+                       help='S3 path (always used as filename)')
+    parser.add_argument('--s3-region', default=os.getenv('AWS_REGION','eu-west-3'),
+                       help='S3 bucket region')
+    parser.add_argument('--config-file', default=os.getenv('CONFIG_FILE', 'sources_config.yaml'),
+                       help='Path to sources_config.yaml for output_metadata')
+    parser.add_argument('--drop-collections', action='store_true',
+                       help='Drop existing collections before loading')
+    parser.add_argument('--file-select', default=os.getenv('FILE_SELECT', 'latest'),
+                       help='Select which files will be ingested : latest(default) or all')
+    parser.add_argument('--report-file', default='logs/ingestion_report.txt',
+                       help='Path to save ingestion report')
+    
+    args = parser.parse_args()
+    # Prevent local storage when ecs mode
+    args.local_storage = args.local_storage and not IS_ECS
+
     main()

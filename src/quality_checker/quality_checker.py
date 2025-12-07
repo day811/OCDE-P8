@@ -26,7 +26,8 @@ from pymongo.errors import ConnectionFailure
 log_level = os.getenv('LOG_LEVEL', 'INFO').upper()
 
 # Détecter si on est en ECS
-IS_ECS = os.getenv('SUBNET_ID') is not None
+RUN_MODE = os.getenv('RUN_MODE','shell')
+IS_ECS = RUN_MODE == 'ecs'
 
 handlers = [
     logging.StreamHandler(sys.stdout),  # Toujours vers stdout
@@ -550,7 +551,7 @@ def main():
     
     args = parser.parse_args()
     
-    if os.getenv('DOCKMODE') or os.getenv('SUBNET_ID'):
+    if RUN_MODE != "shell":
         args.mongodb_uri =  str(args.mongodb_uri).replace('@localhost:', '@mongodb:')
     else:
         args.mongodb_uri =  str(args.mongodb_uri).replace('@mongodb:', '@localhost:')

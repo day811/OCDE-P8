@@ -5,7 +5,6 @@ import json
 import yaml
 import pandas as pd
 from datetime import datetime
-from dotenv import load_dotenv
 from pathlib import Path
 from typing import Dict, List, Any
 from abc import ABC, abstractmethod
@@ -23,7 +22,9 @@ import requests
 log_level = os.getenv('LOG_LEVEL', 'INFO').upper()
 
 # Détecter si on est en ECS
-IS_ECS = os.getenv('SUBNET_ID') is not None
+RUN_MODE = os.getenv('RUN_MODE','shell')
+IS_ECS = RUN_MODE == 'ecs'
+
 
 handlers = [
     logging.StreamHandler(sys.stdout),  # Toujours vers stdout
@@ -527,7 +528,7 @@ class UnifiedDataPipeline:
         
         return all_stations, all_hourly
     
-    def save_normalized_data(self, results: Dict[str, tuple], local_storage: str = None):
+    def save_normalized_data(self, results: Dict[str, tuple], local_storage: bool = True):
         """Save to JSONL files locally or to S3."""
         
         logger.info("=" * 70)
@@ -545,28 +546,28 @@ class UnifiedDataPipeline:
             "hourly": all_hourly
         }
         # set filename
-        s3_path = os.getenv('S3_PATH', 'data')
+        s3_path = args.s3_path
         timestamp = datetime.utcnow().strftime('%Y%m%d_%H%M%S')
         self.filename = f"{s3_path}_{timestamp}.jsonl"
 
         
         # Determine save destination
-        if local_storage and local_storage.strip():
+        if local_storage :
             # Save locally
-            logger.info(f"Saving to local directory: {local_storage}")
-            return self._save_local(unified_structure, local_storage, all_stations, all_hourly)
+            logger.info(f"Saving to local directory: data/clean")
+            return self._save_local(unified_structure,  all_stations, all_hourly)
         else:
             # Save to S3
             logger.info("Saving to S3 (no local directory specified)")
             return self._save_s3(unified_structure, all_stations, all_hourly)
         
     
-    def _save_local(self, unified_structure: Dict, local_storage: str, all_stations: List, all_hourly: Dict):
+    def _save_local(self, unified_structure: Dict, all_stations: List, all_hourly: Dict):
         """Save to local filesystem."""
-        Path(local_storage).mkdir(parents=True, exist_ok=True)
+        #Path("").mkdir(parents=True, exist_ok=True)
         
         
-        output_file = f"{local_storage}/{self.filename}"
+        output_file = f"data/clean/{self.filename}"
 
         # Save as single JSONL record (one line = complete structure)
         with open(output_file, 'w', encoding='utf-8') as f:
@@ -580,21 +581,19 @@ class UnifiedDataPipeline:
     
     def _save_s3(self, unified_structure: Dict, all_stations: List, all_hourly: Dict):
         """Save to S3 bucket (AWS IAM role or local with explicit credentials)."""
-    
-        aws_region = os.getenv('AWS_REGION', 'eu-west-3')
-        s3_bucket = os.getenv('S3_BUCKET')
-        s3_path = os.getenv('S3_PATH', 'data')
+        
+        aws_region = args.aws_region
+        s3_bucket = args.s3_bucket
+        s3_path = args.s3_path
         
         # Déterminer le mode : ECS (IAM role) ou local (credentials explicites)
-        is_ecs = os.getenv('SUBNET_ID') is not None
-        
         if not s3_bucket:
             logger.error("✗ S3_BUCKET not found in environment")
             logger.error(" Falling back to local save in data/clean")
             return self._save_local(unified_structure, 'data/clean', all_stations, all_hourly)
         
         try:
-            if is_ecs:
+            if IS_ECS:
                 # Mode AWS : utiliser IAM role (pas de credentials)
                 logger.info("🔐 AWS ECS mode: Using IAM role for S3 access")
                 s3_client = boto3.client('s3', region_name=aws_region)
@@ -645,7 +644,7 @@ class UnifiedDataPipeline:
             logger.error(" Falling back to local save in data/clean")
             return self._save_local(unified_structure, 'data/clean', all_stations, all_hourly)
             
-    def run(self, local_storage: str = None):
+    def run(self, local_storage: bool):
         """Execute full pipeline."""
         results = self.process_all_sources()
         saved_file = self.save_normalized_data(results, local_storage)
@@ -662,31 +661,28 @@ class UnifiedDataPipeline:
 
 if __name__ == '__main__':
 
-    load_dotenv()
-
     parser = argparse.ArgumentParser(description='Unified Data Pipeline')
     parser.add_argument(
         '--config-file',
         default=os.getenv('CONFIG_FILE','config.yaml'),
         help='Configuration file name in config/'
     )
-    parser.add_argument(
-        '--local-storage',
-        default= os.getenv('LOCAL_STORAGE',None),
-        help='Set Output to local directory or S3(blanck/empty)'
-    )
-    parser.add_argument(
-        '--log-to-stdout',
-        default= None,
-        help='Redirect log to stdout'
-    )
-    
-    args = parser.parse_args()
-    logger.info(f"Configuration file name : {args.config_file}")
-    logger.info(f"Local storage : {args.local_storage}")
-    logger.info(f"Configuration file path : {os.getenv('S3_PATH','None')}")
-    logger.info(f"S3 bucket : {os.getenv('S3_BUCKET','None')}")
+    parser.add_argument('--local-storage', default=os.getenv('LOCAL_STORAGE',False),
+                       type=bool, help='Use Local storage')
+    parser.add_argument('--s3-bucket', default=os.getenv('S3_BUCKET', None),
+                       help='S3 bucket name (if reading from S3)')
+    parser.add_argument('--s3-path', default=os.getenv('S3_PATH'),
+                       help='S3 path (always used as filename)')
+    parser.add_argument('--s3-region', default=os.getenv('AWS_REGION','eu-west-3'),
+                       help='S3 bucket region')
 
+    args = parser.parse_args()
+    args.local_storage = args.local_storage and not IS_ECS
+    
+    logger.info(f"Configuration file name : {args.config_file}")
+    logger.info(f"Local storage : {str(args.local_storage)}")
+    logger.info(f"Configuration file path : {args.config_file}")
+    logger.info(f"S3 bucket : {args.s3_bucket}")
     
     try:
         pipeline = UnifiedDataPipeline(args.config_file)

@@ -7,6 +7,7 @@ import boto3
 from datetime import datetime, timedelta, timezone
 from pymongo import MongoClient
 from dateutil import parser
+import argparse
 
 # ============================================================================
 # LOGGING CONFIGURATION
@@ -14,8 +15,10 @@ from dateutil import parser
 
 log_level = os.getenv('LOG_LEVEL', 'INFO').upper()
 
-# Détecter si on est en ECS / Lambda
-IS_ECS = os.getenv('SUBNET_ID') is not None
+# Détecter si on est en ECS
+RUN_MODE = os.getenv('RUN_MODE','shell')
+IS_ECS = RUN_MODE == 'ecs'
+
 IS_LAMBDA = os.getenv('AWS_LAMBDA_FUNCTION_NAME') is not None
 
 handlers = [
@@ -138,7 +141,8 @@ def get_target_date_range(event):
     Détermine la plage de date cible (début et fin de journée UTC).
     Priorité : 1. Paramètre 'target_date' dans l'event. 2. Hier (J-1).
     """
-    target_date_str = event.get('target_date') if event else "2024-10-05"
+    default_dt = datetime.now(timezone.utc) - timedelta(days=1)
+    target_date_str = event.get('target_date') if event else default_dt
     
     if target_date_str:
         try:
@@ -187,7 +191,7 @@ def measure_query_performance(collection, station_id, start_date, end_date):
     
     return duration_ms, doc_count
 
-def push_metric_to_cloudwatch(station_id, duration_ms, doc_count, date_ref):
+def push_metric_to_cloudwatch(station_id, duration_ms, doc_count, date_ref, metrix_env):
     """Envoie les métriques vers CloudWatch."""
     namespace = os.getenv('CLOUDWATCH_NAMESPACE', 'Greencoop/Forecast')
     
@@ -196,7 +200,7 @@ def push_metric_to_cloudwatch(station_id, duration_ms, doc_count, date_ref):
             'MetricName': 'QueryExecutionTime',
             'Dimensions': [
                 {'Name': 'StationId', 'Value': station_id},
-                {'Name': 'Environment', 'Value': os.getenv('ENV', 'prod')}
+                {'Name': 'Environment', 'Value': metrix_env}
             ],
             'Timestamp': datetime.now(timezone.utc),
             'Value': duration_ms,
@@ -207,7 +211,7 @@ def push_metric_to_cloudwatch(station_id, duration_ms, doc_count, date_ref):
             'MetricName': 'DocumentsRetrieved',
             'Dimensions': [
                 {'Name': 'StationId', 'Value': station_id},
-                {'Name': 'Environment', 'Value': os.getenv('ENV', 'prod')}
+                {'Name': 'Environment', 'Value': metrix_env}
             ],
             'Timestamp': datetime.now(timezone.utc),
             'Value': doc_count,
@@ -217,9 +221,17 @@ def push_metric_to_cloudwatch(station_id, duration_ms, doc_count, date_ref):
     ]
     
     try:
+        # connexion test in any cases
         cloudwatch = get_cloudwatch_client()
-        cloudwatch.put_metric_data(Namespace=namespace, MetricData=metric_data)
-        logger.debug(f"Métriques CloudWatch envoyées pour {station_id}")
+    
+        if metrix_env :
+            cloudwatch.put_metric_data(Namespace=namespace, MetricData=metric_data)
+            logger.debug(f"Métriques CloudWatch {metrix_env} envoyées pour {station_id}")
+        else:
+            logger.debug(f"Métriques CloudWatch non envoyées pour {station_id}")
+            logger.debug(f"Métriques data :\n {metric_data}")
+            
+            
     except Exception as e:
         logger.error(f"Erreur lors de l'envoi CloudWatch pour {station_id}: {str(e)}")
 
@@ -243,6 +255,11 @@ def lambda_handler(event, context):
         # 3. Récupération de la liste des stations actives
         stations = list(stations_coll.find({}, {'id_station': 1}))
         logger.info(f"Nombre de stations à tester: {len(stations)}")
+
+        # 4. Récupération de l'environnement des metrix
+        metrix_env = event.get('metrix_env')
+        if not metrix_env:
+            metrix_env = os.getenv('METRIX_ENV', None)
         
         if not stations:
             logger.warning("Aucune station trouvée dans la base")
@@ -265,7 +282,7 @@ def lambda_handler(event, context):
                 duration, count = measure_query_performance(obs_coll, station_id, start_date, end_date)
                 
                 # Envoi métrique
-                push_metric_to_cloudwatch(station_id, duration, count, start_date)
+                push_metric_to_cloudwatch(station_id, duration, count, start_date,metrix_env)
                 
                 logger.info(f"Station {station_id}: {duration:.2f}ms ({count} docs)")
                 
@@ -315,13 +332,19 @@ if __name__ == '__main__':
     python src/performance/lambda_function.py 2025-12-03
     """
     import sys
+    parser = argparse.ArgumentParser(description='Load JSONL data into MongoDB (normalized schema)')
+    parser.add_argument('--target-date', default="2024-10-05",
+                       help='MongoDB connection URI')
+    parser.add_argument('--metrix-env',None,
+                       help='Metrix environment (None/test/prod)')
     
+    args = parser.parse_args()    
     # Construire l'event de test
     test_event = {}
-    if len(sys.argv) > 1:
-        test_event['target_date'] = sys.argv[1]
+    test_event['target_date'] = sys.target_date
+    test_event['metrix_env'] = sys.metrix_env
     
-    logger.info("Mode développement local - Démarrage du test")
+    logger.info("ENvironnement des metrix")
     
     # Exécuter le handler
     result = lambda_handler(test_event, None)
