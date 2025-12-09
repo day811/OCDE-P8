@@ -14,4 +14,4 @@ COPY config.yaml .
 # Installer dépendances
 RUN pip install --no-cache-dir -r requirements.txt
 
-ENTRYPOINT ["python", "lambda_function.py", "2024-10-05"]
+ENTRYPOINT ["python", "lambda_function.py"]
