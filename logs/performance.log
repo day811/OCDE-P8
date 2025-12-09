@@ -1,0 +1,32 @@
+2025-12-08 16:31:50,964 - __main__ - INFO - Mode d'exécution: shell
+2025-12-08 16:31:50,965 - __main__ - INFO - Configuration file name : False
+2025-12-08 16:31:50,966 - __main__ - INFO - Début du benchmark. Event: {"target_date": "2024-10-05", "metrix_env": null}
+2025-12-08 16:31:50,967 - __main__ - INFO - Mode d'exécution: shell
+2025-12-08 16:31:50,969 - __main__ - INFO - Date cible fournie: 2024-10-05
+2025-12-08 16:31:50,969 - __main__ - INFO - Période cible: 2024-10-05T00:00:00+00:00 à 2024-10-05T23:59:59.999999+00:00
+2025-12-08 16:31:50,969 - __main__ - INFO - Connexion à MongoDB: xxxx:yyyyy@localhost:27017
+2025-12-08 16:31:50,969 - __main__ - INFO - DATABASE_NAME: greencoop_forecast
+2025-12-08 16:31:50,974 - __main__ - INFO - Connexion MongoDB établie
+2025-12-08 16:31:50,984 - __main__ - INFO - Nombre de stations à tester: 6
+2025-12-08 16:31:50,984 - __main__ - INFO - Environnement des metrix : test
+2025-12-08 16:31:50,984 - __main__ - INFO - Requête générée: {'id_station': 'ILAMAD25', 'dh_utc': {'$gte': datetime.datetime(2024, 10, 5, 0, 0, tzinfo=datetime.timezone.utc), '$lte': datetime.datetime(2024, 10, 5, 23, 59, 59, 999999, tzinfo=datetime.timezone.utc)}}/2024-10-05 00:00:00+00:00/2024-10-05 23:59:59.999999+00:00
+2025-12-08 16:31:50,987 - __main__ - INFO - Initialisation CloudWatch en local - région: eu-west-3
+2025-12-08 16:31:51,180 - __main__ - INFO - Métriques CloudWatch test envoyées pour ILAMAD25
+2025-12-08 16:31:51,180 - __main__ - INFO - Station ILAMAD25: 2.64ms (288 docs)
+2025-12-08 16:31:51,180 - __main__ - INFO - Requête générée: {'id_station': 'IICHTE19', 'dh_utc': {'$gte': datetime.datetime(2024, 10, 5, 0, 0, tzinfo=datetime.timezone.utc), '$lte': datetime.datetime(2024, 10, 5, 23, 59, 59, 999999, tzinfo=datetime.timezone.utc)}}/2024-10-05 00:00:00+00:00/2024-10-05 23:59:59.999999+00:00
+2025-12-08 16:31:51,209 - __main__ - INFO - Métriques CloudWatch test envoyées pour IICHTE19
+2025-12-08 16:31:51,209 - __main__ - INFO - Station IICHTE19: 2.83ms (288 docs)
+2025-12-08 16:31:51,209 - __main__ - INFO - Requête générée: {'id_station': '00052', 'dh_utc': {'$gte': datetime.datetime(2024, 10, 5, 0, 0, tzinfo=datetime.timezone.utc), '$lte': datetime.datetime(2024, 10, 5, 23, 59, 59, 999999, tzinfo=datetime.timezone.utc)}}/2024-10-05 00:00:00+00:00/2024-10-05 23:59:59.999999+00:00
+2025-12-08 16:31:51,238 - __main__ - INFO - Métriques CloudWatch test envoyées pour 00052
+2025-12-08 16:31:51,238 - __main__ - INFO - Station 00052: 2.29ms (144 docs)
+2025-12-08 16:31:51,238 - __main__ - INFO - Requête générée: {'id_station': '000R5', 'dh_utc': {'$gte': datetime.datetime(2024, 10, 5, 0, 0, tzinfo=datetime.timezone.utc), '$lte': datetime.datetime(2024, 10, 5, 23, 59, 59, 999999, tzinfo=datetime.timezone.utc)}}/2024-10-05 00:00:00+00:00/2024-10-05 23:59:59.999999+00:00
+2025-12-08 16:31:51,265 - __main__ - INFO - Métriques CloudWatch test envoyées pour 000R5
+2025-12-08 16:31:51,265 - __main__ - INFO - Station 000R5: 1.93ms (144 docs)
+2025-12-08 16:31:51,265 - __main__ - INFO - Requête générée: {'id_station': '07015', 'dh_utc': {'$gte': datetime.datetime(2024, 10, 5, 0, 0, tzinfo=datetime.timezone.utc), '$lte': datetime.datetime(2024, 10, 5, 23, 59, 59, 999999, tzinfo=datetime.timezone.utc)}}/2024-10-05 00:00:00+00:00/2024-10-05 23:59:59.999999+00:00
+2025-12-08 16:31:51,292 - __main__ - INFO - Métriques CloudWatch test envoyées pour 07015
+2025-12-08 16:31:51,292 - __main__ - INFO - Station 07015: 0.84ms (24 docs)
+2025-12-08 16:31:51,292 - __main__ - INFO - Requête générée: {'id_station': 'STATIC0010', 'dh_utc': {'$gte': datetime.datetime(2024, 10, 5, 0, 0, tzinfo=datetime.timezone.utc), '$lte': datetime.datetime(2024, 10, 5, 23, 59, 59, 999999, tzinfo=datetime.timezone.utc)}}/2024-10-05 00:00:00+00:00/2024-10-05 23:59:59.999999+00:00
+2025-12-08 16:31:51,320 - __main__ - INFO - Métriques CloudWatch test envoyées pour STATIC0010
+2025-12-08 16:31:51,320 - __main__ - INFO - Station STATIC0010: 1.86ms (144 docs)
+2025-12-08 16:31:51,320 - __main__ - INFO - Benchmark terminé. 6 stations traitées
+2025-12-08 16:31:51,320 - __main__ - INFO - Résultat: {'statusCode': 200, 'body': '{"message": "Benchmark termin\\u00e9 avec succ\\u00e8s", "date_target": "2024-10-05T00:00:00+00:00", "stations_tested": 6, "details": [{"station": "ILAMAD25", "duration_ms": 2.64, "doc_count": 288}, {"station": "IICHTE19", "duration_ms": 2.83, "doc_count": 288}, {"station": "00052", "duration_ms": 2.29, "doc_count": 144}, {"station": "000R5", "duration_ms": 1.93, "doc_count": 144}, {"station": "07015", "duration_ms": 0.84, "doc_count": 24}, {"station": "STATIC0010", "duration_ms": 1.86, "doc_count": 144}]}'}
