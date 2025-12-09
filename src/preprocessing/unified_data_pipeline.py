@@ -673,16 +673,18 @@ if __name__ == '__main__':
                        help='S3 bucket name (if reading from S3)')
     parser.add_argument('--s3-path', default=os.getenv('S3_PATH'),
                        help='S3 path (always used as filename)')
-    parser.add_argument('--s3-region', default=os.getenv('AWS_REGION','eu-west-3'),
-                       help='S3 bucket region')
+    parser.add_argument('--aws-region', default=os.getenv('AWS_REGION','eu-west-3'),
+                       help='AWS region')
 
     args = parser.parse_args()
     args.local_storage = args.local_storage and not IS_ECS
     
+    logger.info(f"Mode d'exécution: {RUN_MODE}")
     logger.info(f"Configuration file name : {args.config_file}")
     logger.info(f"Local storage : {str(args.local_storage)}")
     logger.info(f"Configuration file path : {args.config_file}")
     logger.info(f"S3 bucket : {args.s3_bucket}")
+    logger.info(f"AWS Regio : {args.aws_region}")
     
     try:
         pipeline = UnifiedDataPipeline(args.config_file)

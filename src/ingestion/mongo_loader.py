@@ -126,9 +126,8 @@ class S3DataSource(DataSource):
         self.path = path
         
         # Déterminer le mode : ECS (IAM role) ou local (credentials explicites)
-        is_ecs = os.getenv('SUBNET_ID') is not None
         
-        if is_ecs:
+        if IS_ECS:
             # Mode AWS : utiliser IAM role (pas de credentials)
             logger.info("🔐 AWS ECS mode: Using IAM role for S3 access")
             self.s3_client = boto3.client('s3', region_name=region)
@@ -657,7 +656,9 @@ def main():
     logger.info('=' * 70)
     logger.info('MONGODB DATA INGESTION PIPELINE - LOADING PHASE')
     logger.info('=' * 70)
+    logger.info(f"Mode d'exécution: {RUN_MODE}")
     logger.info(f"Configuration file name : {args.config_file}")
+    logger.info(f"Drop Collections : {str(args.drop_collections)}")
     logger.info(f"Local storage : {str(args.local_storage)}")
     logger.info(f"Configuration file path : {args.s3_path}")
     logger.info(f"S3 bucket : {args.s3_bucket}")
@@ -706,7 +707,7 @@ def main():
         # 4. Load data
         logger.info('STEP 4: Loading observations and stations')
         logger.info('-' * 70)
-        data_source = get_data_source(local_storage= args.local_storage, pathname= args.s3_path, bucket= args.s3_bucket, region=args.s3_region)
+        data_source = get_data_source(local_storage= args.local_storage, pathname= args.s3_path, bucket= args.s3_bucket, region=args.aws_region)
         
         jsonl_files = sorted(data_source.list_files(args.s3_path))
         
@@ -779,11 +780,11 @@ if __name__ == '__main__':
                        help='S3 bucket name (if reading from S3)')
     parser.add_argument('--s3-path', default=os.getenv('S3_PATH'),
                        help='S3 path (always used as filename)')
-    parser.add_argument('--s3-region', default=os.getenv('AWS_REGION','eu-west-3'),
-                       help='S3 bucket region')
+    parser.add_argument('--aws-region', default=os.getenv('AWS_REGION','eu-west-3'),
+                       help='AWS region')
     parser.add_argument('--config-file', default=os.getenv('CONFIG_FILE', 'sources_config.yaml'),
                        help='Path to sources_config.yaml for output_metadata')
-    parser.add_argument('--drop-collections', action='store_true',
+    parser.add_argument('--drop-collections', type=bool, default = os.getenv('DROP_COLLECTIONS',False),
                        help='Drop existing collections before loading')
     parser.add_argument('--file-select', default=os.getenv('FILE_SELECT', 'latest'),
                        help='Select which files will be ingested : latest(default) or all')
