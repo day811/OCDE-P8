@@ -562,6 +562,7 @@ def main():
     logger.info('MONGODB DATA QUALITY CHECKER - POST-INGESTION ANALYSIS')
     logger.info('=' * 80)
     logger.info('')
+    logger.info(f"Mode d'exécution: {RUN_MODE}")
     
     try:
         # 1. Connect
