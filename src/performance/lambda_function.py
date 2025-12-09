@@ -21,39 +21,35 @@ IS_ECS = RUN_MODE == 'ecs'
 
 IS_LAMBDA = os.getenv('AWS_LAMBDA_FUNCTION_NAME') is not None
 
-handlers = [
-    logging.StreamHandler(sys.stdout),  # Toujours vers stdout
-]
+# Configurer le root logger
+logger = logging.getLogger()
+logger.setLevel(getattr(logging, log_level))
 
-# En local/dev, ajouter fichier
-if not IS_ECS and not IS_LAMBDA:
+# Supprimer les handlers par défaut
+for h in list(logger.handlers):
+    logger.removeHandler(h)
+
+# Formatter commun
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+
+# Handler stdout (toujours)
+stream_handler = logging.StreamHandler(sys.stdout)
+stream_handler.setFormatter(formatter)
+logger.addHandler(stream_handler)
+
+# Handler fichier (local/Docker uniquement, pas Lambda)
+if not IS_LAMBDA:
     os.makedirs('logs', exist_ok=True)
-    handlers.append(
-        logging.FileHandler('logs/performance.log', mode='a', encoding='utf-8')
-    )
+    file_handler = logging.FileHandler('logs/performance.log', mode='a', encoding='utf-8')
+    file_handler.setFormatter(formatter)
+    logger.addHandler(file_handler)
 
-logging.basicConfig(
-    level=getattr(logging, log_level),
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=handlers
-)
-
+# Logger du module
 logger = logging.getLogger(__name__)
 
-# Si en Lambda, ajouter les logs CloudWatch via Watchtower (optionnel mais recommandé)
-try:
-    if IS_LAMBDA:
-        import watchtower
-        cloudwatch_logs = boto3.client('logs')
-        logger.addHandler(
-            watchtower.CloudWatchLogHandler(
-                log_group='/aws/lambda/greencoop-performance-benchmark',
-                stream_name='performance-stream',
-                client=cloudwatch_logs
-            )
-        )
-except ImportError:
-    logger.warning("Watchtower non disponible. Logs CloudWatch désactivés.")
+logger.info(f"Mode d'exécution: {RUN_MODE}")
+logger.info(f"Configuration file name : {str(IS_LAMBDA)}")
+
 
 # ============================================================================
 # INITIALISATION DES CLIENTS
@@ -118,7 +114,7 @@ def get_cloudwatch_client():
 def get_mongo_collection():
     """Établit la connexion à MongoDB et retourne la collection observations."""
     uri = os.getenv('MONGODB_URI')
-    if os.getenv('DOCKMODE') or os.getenv('SUBNET_ID'):
+    if RUN_MODE != 'shell':
         uri =  str(uri).replace('@localhost:', '@mongodb:')
     else:
         uri =  str(uri).replace('@mongodb:', '@localhost:')
@@ -141,9 +137,10 @@ def get_target_date_range(event):
     Détermine la plage de date cible (début et fin de journée UTC).
     Priorité : 1. Paramètre 'target_date' dans l'event. 2. Hier (J-1).
     """
-    default_dt = datetime.now(timezone.utc) - timedelta(days=1)
-    target_date_str = event.get('target_date') if event else default_dt
-    
+    target_date_str = event.get('target_date') if event else None
+    if not target_date_str:
+        target_date_str = os.getenv('TARGET_DATE',None)
+
     if target_date_str:
         try:
             # Accepte le format YYYY-MM-DD
@@ -200,7 +197,8 @@ def push_metric_to_cloudwatch(station_id, duration_ms, doc_count, date_ref, metr
             'MetricName': 'QueryExecutionTime',
             'Dimensions': [
                 {'Name': 'StationId', 'Value': station_id},
-                {'Name': 'Environment', 'Value': metrix_env}
+                {'Name': 'Environment', 'Value': metrix_env},
+                {'Name': 'Reference Date', 'Value': date_ref}
             ],
             'Timestamp': datetime.now(timezone.utc),
             'Value': duration_ms,
@@ -211,7 +209,8 @@ def push_metric_to_cloudwatch(station_id, duration_ms, doc_count, date_ref, metr
             'MetricName': 'DocumentsRetrieved',
             'Dimensions': [
                 {'Name': 'StationId', 'Value': station_id},
-                {'Name': 'Environment', 'Value': metrix_env}
+                {'Name': 'Environment', 'Value': metrix_env},
+                {'Name': 'Reference Date', 'Value': date_ref}
             ],
             'Timestamp': datetime.now(timezone.utc),
             'Value': doc_count,
@@ -224,11 +223,11 @@ def push_metric_to_cloudwatch(station_id, duration_ms, doc_count, date_ref, metr
         # connexion test in any cases
         cloudwatch = get_cloudwatch_client()
     
-        if metrix_env :
+        if metrix_env != 'no-log':
             cloudwatch.put_metric_data(Namespace=namespace, MetricData=metric_data)
-            logger.debug(f"Métriques CloudWatch {metrix_env} envoyées pour {station_id}")
+            logger.info(f"Métriques CloudWatch {metrix_env} envoyées pour {station_id}")
         else:
-            logger.debug(f"Métriques CloudWatch non envoyées pour {station_id}")
+            logger.info(f"Métriques CloudWatch non envoyées (no-log) pour {station_id}")
             logger.debug(f"Métriques data :\n {metric_data}")
             
             
@@ -241,9 +240,13 @@ def push_metric_to_cloudwatch(station_id, duration_ms, doc_count, date_ref, metr
 
 def lambda_handler(event, context):
     """Point d'entrée principal de la Lambda."""
+    print("DEBUG: Je suis un print simple")  
     logger.info(f"Début du benchmark. Event: {json.dumps(event) if event else 'Aucun event'}")
     
     try:
+        
+        logger.info(f"Mode d'exécution: {RUN_MODE}")
+        
         # 1. Configuration de la date
         start_date, end_date = get_target_date_range(event)
         logger.info(f"Période cible: {start_date.isoformat()} à {end_date.isoformat()}")
@@ -259,8 +262,9 @@ def lambda_handler(event, context):
         # 4. Récupération de l'environnement des metrix
         metrix_env = event.get('metrix_env')
         if not metrix_env:
-            metrix_env = os.getenv('METRIX_ENV', None)
+            metrix_env = os.getenv('METRIX_ENV', 'no-log')
         
+        logger.info(f"Environnement des metrix : {metrix_env}")
         if not stations:
             logger.warning("Aucune station trouvée dans la base")
             return {
@@ -282,7 +286,7 @@ def lambda_handler(event, context):
                 duration, count = measure_query_performance(obs_coll, station_id, start_date, end_date)
                 
                 # Envoi métrique
-                push_metric_to_cloudwatch(station_id, duration, count, start_date,metrix_env)
+                push_metric_to_cloudwatch(station_id, duration, count, start_date.isoformat(), metrix_env)
                 
                 logger.info(f"Station {station_id}: {duration:.2f}ms ({count} docs)")
                 
@@ -331,20 +335,17 @@ if __name__ == '__main__':
     # Test avec date spécifique
     python src/performance/lambda_function.py 2025-12-03
     """
-    import sys
     parser = argparse.ArgumentParser(description='Load JSONL data into MongoDB (normalized schema)')
     parser.add_argument('--target-date', default="2024-10-05",
                        help='MongoDB connection URI')
-    parser.add_argument('--metrix-env',None,
-                       help='Metrix environment (None/test/prod)')
+    parser.add_argument('--metrix-env',default = None,
+                       help='Metrix environment (no-log/test/prod)')
     
     args = parser.parse_args()    
     # Construire l'event de test
     test_event = {}
-    test_event['target_date'] = sys.target_date
-    test_event['metrix_env'] = sys.metrix_env
-    
-    logger.info("ENvironnement des metrix")
+    test_event['target_date'] = args.target_date
+    test_event['metrix_env'] = args.metrix_env
     
     # Exécuter le handler
     result = lambda_handler(test_event, None)
