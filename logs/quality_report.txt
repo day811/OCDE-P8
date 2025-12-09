@@ -2,7 +2,7 @@
 MONGODB DATA QUALITY REPORT - POST-INGESTION ANALYSIS
 ================================================================================
 
-Report generated: 2025-12-04T10:52:52.580689+00:00
+Report generated: 2025-12-09T15:24:35.483611+00:00
 
 COLLECTION STATISTICS
 --------------------------------------------------------------------------------
@@ -44,9 +44,9 @@ QUALITY CHECKS
     temperature_types: {'double': 4950}
     station_types: {'string': 4950}
 ✓ Check 7: Date Coverage
- Min date: 2024-10-01T00:04:00Z
- Max date: 2024-10-07T14:59:00Z
- Coverage: 32457.14%
+ Min date: 2024-10-01 00:04:00
+ Max date: 2024-10-07 14:59:00
+ Coverage: 0%
 
 ALERTS
 --------------------------------------------------------------------------------

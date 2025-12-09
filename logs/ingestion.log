@@ -1,42 +1,4 @@
-2025-12-04 10:52:50,532 - __main__ - INFO - ======================================================================
-2025-12-04 10:52:50,532 - __main__ - INFO - MONGODB DATA INGESTION PIPELINE - LOADING PHASE
-2025-12-04 10:52:50,532 - __main__ - INFO - ======================================================================
-2025-12-04 10:52:50,532 - __main__ - INFO - Configuration file name : config.yaml
-2025-12-04 10:52:50,532 - __main__ - INFO - Local storage : data/clean
-2025-12-04 10:52:50,532 - __main__ - INFO - Configuration file path : weather_data_unified
-2025-12-04 10:52:50,532 - __main__ - INFO - S3 bucket : greencoop-forecast-raw-data
-2025-12-04 10:52:50,532 - __main__ - INFO - STEP 1: Connecting to MongoDB
-2025-12-04 10:52:50,532 - __main__ - INFO - ----------------------------------------------------------------------
-2025-12-04 10:52:50,532 - __main__ - INFO - Connecting to MongoDB: mongodb:27017
-2025-12-04 10:52:50,540 - __main__ - INFO - ✓ Connected to database: greencoop_forecast
-2025-12-04 10:52:50,540 - __main__ - INFO - 
-2025-12-04 10:52:50,540 - __main__ - INFO - STEP 2: Creating collections and indexes
-2025-12-04 10:52:50,540 - __main__ - INFO - ----------------------------------------------------------------------
-2025-12-04 10:52:50,545 - __main__ - INFO - ✓ Created collection: stations
-2025-12-04 10:52:50,551 - __main__ - INFO - ✓ Created collection: observations with schema validation
-2025-12-04 10:52:50,557 - __main__ - INFO - ✓ Created collection: schema_metadata
-2025-12-04 10:52:50,563 - __main__ - INFO - ✓ Created indexes on stations
-2025-12-04 10:52:50,571 - __main__ - INFO - ✓ Created indexes on observations
-2025-12-04 10:52:50,574 - __main__ - INFO - ✓ Created indexes on schema_metadata
-2025-12-04 10:52:50,574 - __main__ - INFO - 
-2025-12-04 10:52:50,574 - __main__ - INFO - STEP 3: Loading schema metadata
-2025-12-04 10:52:50,574 - __main__ - INFO - ----------------------------------------------------------------------
-2025-12-04 10:52:50,588 - __main__ - INFO - Loaded 26 fields from output_metadata
-2025-12-04 10:52:50,596 - __main__ - INFO - ✓ Schema metadata loaded: 26 fields
-2025-12-04 10:52:50,596 - __main__ - INFO - 
-2025-12-04 10:52:50,596 - __main__ - INFO - STEP 4: Loading observations and stations
-2025-12-04 10:52:50,596 - __main__ - INFO - ----------------------------------------------------------------------
-2025-12-04 10:52:50,596 - __main__ - INFO - Using local data source folder: data/clean
-2025-12-04 10:52:50,596 - __main__ - INFO - Using local data source folder: data/clean
-2025-12-04 10:52:50,597 - __main__ - INFO - Load only latest file
-2025-12-04 10:52:50,597 - __main__ - INFO - Loading: data/clean/weather_data_unified_20251204_105241.jsonl
-2025-12-04 10:52:51,980 - __main__ - INFO -   ✓ Stations: 6 inserted, 0 updated
-2025-12-04 10:52:51,980 - __main__ - INFO -   ✓ Observations: 4950 inserted, 0 updated
-2025-12-04 10:52:51,980 - __main__ - INFO -   ⚠️  Skipped: 0, Errors: 0
-2025-12-04 10:52:51,980 - __main__ - INFO - 
-2025-12-04 10:52:51,980 - __main__ - INFO - STEP 5: Generating ingestion report
-2025-12-04 10:52:51,980 - __main__ - INFO - ----------------------------------------------------------------------
-2025-12-04 10:52:51,980 - __main__ - INFO - ✓ Report saved to: logs/ingestion_report.txt
+
 2025-12-04 10:52:51,981 - __main__ - INFO - ======================================================================
 MONGODB INGESTION REPORT - LOADING PHASE
 ======================================================================
@@ -52,3 +14,55 @@ Skipped: 0, Errors: 0
 2025-12-04 10:52:51,981 - __main__ - INFO - ✓ Disconnected from MongoDB
 2025-12-04 10:52:51,981 - __main__ - INFO - 
 2025-12-04 10:52:51,981 - __main__ - INFO - ✅ SUCCESS - Ingestion completed
+2025-12-09 15:24:33,453 - __main__ - INFO - ======================================================================
+2025-12-09 15:24:33,453 - __main__ - INFO - MONGODB DATA INGESTION PIPELINE - LOADING PHASE
+2025-12-09 15:24:33,454 - __main__ - INFO - ======================================================================
+2025-12-09 15:24:33,454 - __main__ - INFO - Mode d'exécution: docker
+2025-12-09 15:24:33,454 - __main__ - INFO - Configuration file name : config.yaml
+2025-12-09 15:24:33,454 - __main__ - INFO - Drop Collections : False
+2025-12-09 15:24:33,454 - __main__ - INFO - Local storage : True
+2025-12-09 15:24:33,454 - __main__ - INFO - Configuration file path : weather_data_unified
+2025-12-09 15:24:33,454 - __main__ - INFO - S3 bucket : greencoop-forecast-raw-data
+2025-12-09 15:24:33,454 - __main__ - INFO - STEP 1: Connecting to MongoDB
+2025-12-09 15:24:33,454 - __main__ - INFO - ----------------------------------------------------------------------
+2025-12-09 15:24:33,454 - __main__ - INFO - Connecting to MongoDB: mongodb:27017
+2025-12-09 15:24:33,461 - __main__ - INFO - ✓ Connected to database: greencoop_forecast
+2025-12-09 15:24:33,461 - __main__ - INFO - 
+2025-12-09 15:24:33,461 - __main__ - INFO - STEP 2: Creating collections and indexes
+2025-12-09 15:24:33,461 - __main__ - INFO - ----------------------------------------------------------------------
+2025-12-09 15:24:33,463 - __main__ - INFO - ✓ Created indexes on stations
+2025-12-09 15:24:33,464 - __main__ - INFO - ✓ Created indexes on observations
+2025-12-09 15:24:33,464 - __main__ - INFO - ✓ Created indexes on schema_metadata
+2025-12-09 15:24:33,464 - __main__ - INFO - 
+2025-12-09 15:24:33,464 - __main__ - INFO - STEP 3: Loading schema metadata
+2025-12-09 15:24:33,464 - __main__ - INFO - ----------------------------------------------------------------------
+2025-12-09 15:24:33,478 - __main__ - INFO - Loaded 26 fields from output_metadata
+2025-12-09 15:24:33,488 - __main__ - INFO - ✓ Schema metadata loaded: 26 fields
+2025-12-09 15:24:33,488 - __main__ - INFO - 
+2025-12-09 15:24:33,488 - __main__ - INFO - STEP 4: Loading observations and stations
+2025-12-09 15:24:33,488 - __main__ - INFO - ----------------------------------------------------------------------
+2025-12-09 15:24:33,488 - __main__ - INFO - Using local data source folder: data/clean
+2025-12-09 15:24:33,488 - __main__ - INFO - Load only latest file
+2025-12-09 15:24:33,488 - __main__ - INFO - Loading: data/clean/weather_data_unified_20251209_152425.jsonl
+2025-12-09 15:24:34,847 - __main__ - INFO -   ✓ Stations: 0 inserted, 6 updated
+2025-12-09 15:24:34,847 - __main__ - INFO -   ✓ Observations: 0 inserted, 4950 updated
+2025-12-09 15:24:34,847 - __main__ - INFO -   ⚠️  Skipped: 0, Errors: 0
+2025-12-09 15:24:34,847 - __main__ - INFO - 
+2025-12-09 15:24:34,847 - __main__ - INFO - STEP 5: Generating ingestion report
+2025-12-09 15:24:34,847 - __main__ - INFO - ----------------------------------------------------------------------
+2025-12-09 15:24:34,847 - __main__ - INFO - ✓ Report saved to: logs/ingestion_report.txt
+2025-12-09 15:24:34,847 - __main__ - INFO - ======================================================================
+MONGODB INGESTION REPORT - LOADING PHASE
+======================================================================
+
+LOADING SUMMARY
+----------------------------------------------------------------------
+Stations - Inserted: 0, Updated: 6
+Observations - Inserted: 0, Updated: 4950
+Schema fields loaded: 26
+Skipped: 0, Errors: 0
+
+======================================================================
+2025-12-09 15:24:34,847 - __main__ - INFO - ✓ Disconnected from MongoDB
+2025-12-09 15:24:34,847 - __main__ - INFO - 
+2025-12-09 15:24:34,847 - __main__ - INFO - ✅ SUCCESS - Ingestion completed

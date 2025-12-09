@@ -4,8 +4,8 @@ MONGODB INGESTION REPORT - LOADING PHASE
 
 LOADING SUMMARY
 ----------------------------------------------------------------------
-Stations - Inserted: 6, Updated: 0
-Observations - Inserted: 4950, Updated: 0
+Stations - Inserted: 0, Updated: 6
+Observations - Inserted: 0, Updated: 4950
 Schema fields loaded: 26
 Skipped: 0, Errors: 0
 
