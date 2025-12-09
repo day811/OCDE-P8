@@ -26,7 +26,7 @@
       "justMyCode": true,
       "args": [
         "--local-storage",
-        "True"
+        "True",
       ],
       "env": {
         "PYTHONPATH": "${workspaceFolder}"
@@ -56,9 +56,7 @@
       "justMyCode": true,
       "args": [
         "--target-date",
-        "2024-10-05",
-        "--metrix-env",
-        "None"
+        "2024-10-05"
       ],
       "env": {
         "PYTHONPATH": "${workspaceFolder}"
