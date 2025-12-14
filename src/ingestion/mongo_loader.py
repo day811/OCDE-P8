@@ -774,7 +774,7 @@ if __name__ == '__main__':
                        help='MongoDB connection URI')
     parser.add_argument('--database', default=os.getenv('DATABASE_NAME', 'greencoop_forecast'),
                        help='Target database name')
-    parser.add_argument('--local-storage', default=os.getenv('LOCAL_STORAGE',False),
+    parser.add_argument('--local-storage', default=os.getenv('LOCAL_STORAGE','False').lower()=='true',
                        type=bool, help='Local storage')
     parser.add_argument('--s3-bucket', default=os.getenv('S3_BUCKET', None),
                        help='S3 bucket name (if reading from S3)')

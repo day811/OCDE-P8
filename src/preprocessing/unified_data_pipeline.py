@@ -667,7 +667,7 @@ if __name__ == '__main__':
         default=os.getenv('CONFIG_FILE','config.yaml'),
         help='Configuration file name in config/'
     )
-    parser.add_argument('--local-storage', default=os.getenv('LOCAL_STORAGE',False),
+    parser.add_argument('--local-storage', default=os.getenv('LOCAL_STORAGE','False').lower() == 'true',
                        type=bool, help='Use Local storage')
     parser.add_argument('--s3-bucket', default=os.getenv('S3_BUCKET', None),
                        help='S3 bucket name (if reading from S3)')
@@ -684,7 +684,7 @@ if __name__ == '__main__':
     logger.info(f"Local storage : {str(args.local_storage)}")
     logger.info(f"Configuration file path : {args.config_file}")
     logger.info(f"S3 bucket : {args.s3_bucket}")
-    logger.info(f"AWS Regio : {args.aws_region}")
+    logger.info(f"AWS Region : {args.aws_region}")
     
     try:
         pipeline = UnifiedDataPipeline(args.config_file)
